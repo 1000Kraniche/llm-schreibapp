@@ -1,0 +1,32 @@
+{# page/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Home{% endblock %}
+
+{% block body %}
+<section class="flex-grow-1 content">
+  <div class="row">
+    <div class="col-lg-8 h-100">
+      <div class="editor-container">
+        <div id="editor" class="editor-content"></div>
+      </div>
+    </div>
+    <div class="col-lg-4 h-100 d-flex flex-column">
+      <div class="info-box flex-fill">
+        <h6>Suche</h6>
+        <form class="d-flex" role="search">
+          <input class="form-control" type="search" placeholder="Search" aria-label="Search" />
+          <button class="btn" type="submit">Search</button>
+        </form>
+      </div>
+      <div class="llm-box flex-fill">
+        <h6>LLM Text Feld</h6>
+        <p>Deep Seek über Ollama</p>
+        <div class="llm-chat">
+          <h6>LLM Chat Feld</h6>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,42 @@
+/* public/assets/css/editor.css */
+.ProseMirror {
+  outline: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  min-height: 300px;
+  padding: 1rem;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  height: 100%;
+}
+
+#editor,
+.info-box,
+.llm-chat {
+  background: #f2f2f2;
+  padding: 5px;
+}
+
+
+#editorpage {
+  height: calc(100% - 43px);
+}
+.editorsite .col-12.flex-column {
+  padding: 15px !important;
+}
+
+.editor-toolbar .input-group {
+
+}
+.editor-toolbar #font-size.form-select {
+  width: 20px;
+  padding: 4px 37px 4px 0px;
+  width: 0px !important;
+}
+.editor-toolbar #font-size-input.form-control {
+  width: 42px;
+  padding: 4px 0px;
+}
+
+

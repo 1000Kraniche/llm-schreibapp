@@ -1,0 +1,202 @@
+/* RESET RULES
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap');
+
+:root {
+  --white: white;
+  --black: black;
+  --menu-color: #b1ffe5;
+  --fixed-menu-color: aquamarine;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+ul {
+  list-style: none;
+}
+
+button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+button:active {
+  color: var(--black);
+}
+
+a {
+  text-decoration: none;
+  color: var(--black);
+}
+
+body {
+  font: normal 18px/1.5 "Ubuntu", sans-serif;
+}
+
+.no-transition * {
+  transition: none !important;
+}
+
+
+/* MENU WRAPPER RULES
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+header {
+  position: relative;
+  z-index: 1000;
+}
+.top-nav .menu-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 350px;
+  padding: 20px;
+  transform: translateX(-200px);
+  transition: transform 0.7s;
+  background: var(--menu-color);
+}
+
+.top-nav .menu-wrapper.is-opened {
+  transform: translateX(150px);
+}
+
+.top-nav .menu-wrapper .menu {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.top-nav .menu-wrapper.is-opened .menu {
+  opacity: 1;
+  transition-delay: 0.6s;
+}
+
+.top-nav .menu-wrapper .menu a {
+  font-size: 1.2rem;
+}
+
+.top-nav .menu-wrapper .sub-menu {
+  padding: 10px 0 0 7px;
+}
+
+.top-nav .menu-wrapper .menu-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 2rem;
+}
+
+/* FIXED MENU RULES
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.top-nav .fixed-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  width: 150px;
+  padding: 20px;
+  background: var(--fixed-menu-color);
+}
+
+.top-nav .fixed-menu .menu-toggle {
+  font-size: 2rem;
+  text-align: left;
+  margin: 30px 0 auto;
+  width: 28px;
+}
+
+/* MQ STYLES
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+@media (max-width: 900px) {
+  body {
+    font-size: 16px;
+    overflow-x: hidden;
+  }
+
+  .top-banner {
+    top: 50px;
+    left: auto;
+    width: 100%;
+    height: calc(100vh - 50px);
+    transform: none;
+    align-items: center;
+  }
+
+  .top-banner-overlay {
+    position: relative; /*2*/
+    left: 0; /*2*/
+    max-width: 100%;
+  }
+
+  .top-banner-overlay.is-moved {
+    left: 100%; /*2*/
+    transform: none;
+  }
+
+  .top-nav .menu-wrapper {
+    width: 100%;
+    transform: translateX(-100%);
+    padding-top: 70px;
+  }
+
+  .top-nav .menu-wrapper.is-opened {
+    transform: none;
+  }
+
+  .top-nav .menu-wrapper .menu-close {
+    top: 70px;
+  }
+
+  .top-nav .fixed-menu {
+    bottom: auto;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    height: 50px;
+    padding: 0 20px;
+  }
+
+  .top-nav .fixed-menu .menu-toggle {
+    margin: 0;
+    order: 3;
+  }
+
+  .top-nav .socials {
+    display: flex;
+    margin-left: auto;
+  }
+
+  .top-nav .socials li {
+    margin-right: 15px;
+  }
+
+  .top-nav .socials li + li {
+    margin-top: 0;
+  }
+}
+
+/* FOOTER STYLES
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.page-footer {
+  position: fixed;
+  right: 0;
+  bottom: 50px;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  z-index: 1;
+  font-size: 16px;
+  background: var(--white);
+}
+
+.page-footer a {
+  display: flex;
+  margin-left: 4px;
+}

@@ -1,0 +1,40 @@
+{# page/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Home
+{% endblock %}
+
+{% block body %}
+	<section class="flex-grow-1 content">
+		<div class="row">
+			<div class="col-lg-8 h-100">
+				<div class="editor-container">
+					<div id="editor"
+                data-id="{{ text_document.id }}"
+                data-content='{{ text_document.content|e("html_attr") }}'>
+            </div>
+
+				</div>
+			</div>
+			<div class="col-lg-4 h-100 d-flex flex-column">
+				<div class="info-box flex-fill">
+					<h6>Suche</h6>
+					<form class="d-flex" role="search">
+						<input class="form-control" type="search" placeholder="Search" aria-label="Search"/>
+						<button class="btn" type="submit">Search</button>
+					</form>
+				</div>
+				<div class="llm-chat bg-white text-dark" id="llm-chat-box">
+					<div class="mt-3">
+						<h6>Antwort:</h6>
+						<div id="llm-response" class="border p-2 rounded" style="min-height: 80px;">Noch nichts gefragt.</div>
+					</div>
+					<form id="llm-form">
+						<textarea class="form-control mb-2" id="llm-input" rows="3" placeholder="Frage an das LLM..."></textarea>
+						<button type="submit" class="btn btn-primary w-100">Absenden</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</section>
+{% endblock %}

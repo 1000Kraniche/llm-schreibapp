@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Projekt Übersicht
+{% endblock %}
+
+{% block body %}
+  <main class="vh-100 vw-100 pt-3 pb-3 project-site">
+<div class="container py-5">
+  <div class="row g-4">
+
+    <!-- Neues Projekt -->
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+      <div class="card h-100 border-0 text-center shadow-sm d-flex align-items-center justify-content-center" style="height: 200px;">
+        <a href="#" class="text-decoration-none text-primary fs-1">+</a>
+        <p class="mt-2 mb-0">Neues Projekt</p>
+      </div>
+    </div>
+
+    <!-- Beispielprojekt 1 -->
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title">Projekt: Marktdaten 2025</h6>
+          <p class="card-text text-muted">Geöffnet 02.05.2025</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Beispielprojekt 2 -->
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title">Projekt: Bericht KI-Ethik</h6>
+          <p class="card-text text-muted">Geöffnet 28.04.2025</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Beispielprojekt 3 -->
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title">Projekt: Text Text Text</h6>
+          <p class="card-text text-muted">Geöffnet 25.04.2025</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weitere Projekte einfach durch Kopieren weiterer .col-Elemente -->
+  </div>
+</div>
+
+  </main>
+
+	<script type="module" src="{{ asset('build/editor.js') }}"></script>
+
+{% endblock %}
