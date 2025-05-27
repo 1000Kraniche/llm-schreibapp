@@ -1,0 +1,189 @@
+/* Summernote CSS Fixes für besseres Styling */
+
+/* Editor Container */
+.note-editor {
+    border: 1px solid #dee2e6 !important;
+    border-radius: 0.375rem !important;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+/* Toolbar Styling */
+.note-toolbar {
+    background-color: #f8f9fa !important;
+    border-bottom: 1px solid #dee2e6 !important;
+    padding: 0.5rem !important;
+}
+
+.note-toolbar .btn-group {
+    margin-right: 0.25rem !important;
+}
+
+.note-toolbar .btn {
+    border: 1px solid #dee2e6 !important;
+    margin-right: 2px !important;
+    font-size: 0.875rem !important;
+    padding: 0.25rem 0.5rem !important;
+}
+
+.note-toolbar .btn:hover {
+    background-color: #e9ecef !important;
+}
+
+.note-toolbar .btn.active {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    color: white !important;
+}
+
+/* Editor Bereich */
+.note-editable {
+    padding: 1rem !important;
+    min-height: 400px !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    color: #212529 !important;
+}
+
+.note-editable:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+}
+
+/* Dropdown-Menüs */
+.note-dropdown-menu {
+    border: 1px solid #dee2e6 !important;
+    border-radius: 0.375rem !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.note-dropdown-item {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+}
+
+.note-dropdown-item:hover {
+    background-color: #f8f9fa !important;
+}
+
+/* Status Bar */
+.note-statusbar {
+    border-top: 1px solid #dee2e6 !important;
+    background-color: #f8f9fa !important;
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    color: #6c757d !important;
+}
+
+/* Modal Dialogs */
+.note-modal .modal-content {
+    border-radius: 0.5rem !important;
+}
+
+.note-modal .modal-header {
+    background-color: #f8f9fa !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+/* Responsive Anpassungen */
+@media (max-width: 768px) {
+    .note-toolbar {
+        flex-wrap: wrap !important;
+    }
+    
+    .note-toolbar .btn-group {
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .note-editable {
+        min-height: 300px !important;
+        padding: 0.75rem !important;
+    }
+}
+
+/* Editor im Vollbild-Modus */
+.note-editor.fullscreen {
+    z-index: 9999 !important;
+}
+
+.note-editor.fullscreen .note-editable {
+    background-color: white !important;
+}
+
+/* Popover-Styling */
+.note-popover .popover {
+    max-width: 300px !important;
+}
+
+.note-popover .popover-content {
+    padding: 0.5rem !important;
+}
+
+/* Link-Dialog */
+.note-link-dialog .form-control {
+    border: 1px solid #dee2e6 !important;
+    border-radius: 0.375rem !important;
+    padding: 0.375rem 0.75rem !important;
+}
+
+/* Bild-Dialog */
+.note-image-dialog .form-control {
+    border: 1px solid #dee2e6 !important;
+    border-radius: 0.375rem !important;
+}
+
+/* Tabellen-Styling */
+.note-editable table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    margin: 1rem 0 !important;
+}
+
+.note-editable table td,
+.note-editable table th {
+    border: 1px solid #dee2e6 !important;
+    padding: 0.5rem !important;
+}
+
+.note-editable table th {
+    background-color: #f8f9fa !important;
+    font-weight: 600 !important;
+}
+
+/* Code-Block Styling */
+.note-editable pre {
+    background-color: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 0.375rem !important;
+    padding: 1rem !important;
+    font-family: 'Courier New', monospace !important;
+    font-size: 0.875rem !important;
+    overflow-x: auto !important;
+}
+
+/* Listen-Styling */
+.note-editable ul,
+.note-editable ol {
+    padding-left: 2rem !important;
+    margin: 0.5rem 0 !important;
+}
+
+.note-editable li {
+    margin-bottom: 0.25rem !important;
+}
+
+/* Blockquote-Styling */
+.note-editable blockquote {
+    border-left: 4px solid #0d6efd !important;
+    background-color: #f8f9fa !important;
+    padding: 1rem !important;
+    margin: 1rem 0 !important;
+    font-style: italic !important;
+}
+
+/* HR-Styling */  
+.note-editable hr {
+    border: none !important;
+    border-top: 2px solid #dee2e6 !important;
+    margin: 2rem 0 !important;
+}
