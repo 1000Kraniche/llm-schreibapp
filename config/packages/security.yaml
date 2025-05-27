@@ -20,11 +20,10 @@ security:
                 login_path: app_login
                 check_path: app_login
                 enable_csrf: true
-                default_target_path: /workspace-demo
-
+                default_target_path: /project-list
             logout:
                 path: app_logout
-                target: '/home'
+                target: '/'
 
             remember_me:
                 secret: '%kernel.secret%'

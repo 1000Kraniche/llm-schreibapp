@@ -49,8 +49,12 @@
       <button class="menu-toggle" type="button" aria-label="toggle menu">☰</button>
       <ul class="socials">
         <li>
-          <a href="">Anmelden</a>
-        </li>
+							{% if app.user %}
+								<p>Angemeldet als
+									{{ app.user.userIdentifier }}</p>
+								<a href="{{ path('app_logout') }}" class="btn btn-outline-light">Abmelden</a>
+							{% endif %}
+						</li>
         <li>
           <a href="">twitter</a>
         </li>
