@@ -30,7 +30,7 @@ class Project
 
     #[ORM\ManyToOne(inversedBy: 'projects')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Appuser $owner = null;
+    private ?AppUser $owner = null;
 
     /**
      * @var Collection<int, TextDocument>
