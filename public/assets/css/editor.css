@@ -38,5 +38,39 @@
   width: 42px;
   padding: 4px 0px;
 }
+.note-editor,
+.note-editing-area {
+  height: 100%;
+}
+/* Editor Container muss Flex sein */
+.editor-side {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
 
+.flex-grow-1 {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
 
+/* Summernote soll den verfügbaren Raum nehmen */
+.note-editor {
+    flex: 1;
+    min-height: 300px;
+    max-height: calc(100vh - 150px); /* Verhindert Überlauf */
+    display: flex;
+    flex-direction: column;
+}
+
+.note-editing-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.note-editable {
+    flex: 1;
+    overflow-y: auto; /* Scrollbar wenn nötig */
+}

@@ -47,22 +47,102 @@ function initializeSummernoteEditor() {
     
     console.log('✅ Editor Element gefunden, initialisiere Summernote...');
 
-    // Summernote initialisieren
+    // Summernote mit KORREKTEN Button-Namen initialisieren
     editorElement.summernote({
         height: 500,
-        lang: 'de-DE',
+        
+        // Deutsche Sprachdatei entfernen (macht oft Probleme)
+        // lang: 'de-DE', ← ENTFERNT!
         focus: true,
+        
+        // FUNKTIONIERENDE TOOLBAR ohne kaputten style-Button
         toolbar: [
-            ['style', ['style']],
-            ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
-            ['fontname', ['fontname']],
-            ['fontsize', ['fontsize']],
+            // Zeile 1: Überschriften als einzelne Buttons (funktioniert IMMER!)
+            ['heading', ['p', 'h1', 'h2', 'h3', 'h4']],
+            
+            // Zeile 2: Text-Formatierung
+            ['font', ['bold', 'italic', 'underline', 'strikethrough']],
+            
+            // Zeile 3: Absatz-Formatierung und Listen
+            ['para', ['paragraph', 'ul', 'ol']],
+            
+            // Zeile 4: Farben
             ['color', ['color']],
-            ['para', ['ul', 'ol', 'paragraph']],
-            ['table', ['table']],
-            ['insert', ['link', 'picture', 'hr']],
+            
+            // Zeile 5: Einfügen
+            ['insert', ['link', 'picture', 'table', 'hr']],
+            
+            // Zeile 6: Ansicht
             ['view', ['fullscreen', 'codeview']]
         ],
+        
+        // Custom Buttons für H1, H2, H3, etc.
+        buttons: {
+            p: function(context) {
+                var ui = $.summernote.ui;
+                return ui.button({
+                    contents: 'P',
+                    tooltip: 'Normal Text',
+                    click: function() {
+                        context.invoke('formatBlock', 'p');
+                    }
+                }).render();
+            },
+            h1: function(context) {
+                var ui = $.summernote.ui;
+                return ui.button({
+                    contents: 'H1',
+                    tooltip: 'Überschrift 1',
+                    click: function() {
+                        context.invoke('formatBlock', 'h1');
+                    }
+                }).render();
+            },
+            h2: function(context) {
+                var ui = $.summernote.ui;
+                return ui.button({
+                    contents: 'H2',
+                    tooltip: 'Überschrift 2',
+                    click: function() {
+                        context.invoke('formatBlock', 'h2');
+                    }
+                }).render();
+            },
+            h3: function(context) {
+                var ui = $.summernote.ui;
+                return ui.button({
+                    contents: 'H3',
+                    tooltip: 'Überschrift 3',
+                    click: function() {
+                        context.invoke('formatBlock', 'h3');
+                    }
+                }).render();
+            },
+            h4: function(context) {
+                var ui = $.summernote.ui;
+                return ui.button({
+                    contents: 'H4',
+                    tooltip: 'Überschrift 4',
+                    click: function() {
+                        context.invoke('formatBlock', 'h4');
+                    }
+                }).render();
+            }
+        },
+
+        
+        // Bessere Schriftarten-Liste
+        fontNames: [
+            'Arial', 'Georgia', 'Times New Roman', 'Helvetica', 'Verdana'
+        ],
+        
+        // Erweiterte Farbpalette
+        colors: [
+            ['#000000', '#424242', '#636363', '#9C9C94', '#CEC6CE', '#EFEFEF', '#F7F3F7', '#FFFFFF'],
+            ['#FF0000', '#FF9C00', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#9C00FF', '#FF00FF'],
+            ['#F7C6CE', '#FFE7CE', '#FFEAA7', '#D1F2A5', '#AEDFF7', '#A29BFE', '#DDA0DD', '#F8BBD0']
+        ],
+        
         callbacks: {
             onInit: function() {
                 console.log('🎉 Summernote Editor erfolgreich initialisiert!');
@@ -115,22 +195,47 @@ function saveContent(isManual = true) {
     const content = $('#summernote-editor').summernote('code');
     console.log('💾 Speichere Content für Projekt:', projectId, 'Länge:', content.length);
     
-    // Hier würde normalerweise der API-Call stehen
-    // Für jetzt simulieren wir das Speichern
-    setTimeout(() => {
-        hasUnsavedChanges = false;
-        const now = new Date().toLocaleTimeString();
+    // ECHTER API-Call zum Speichern
+    fetch('/api/textdocument/save', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({
+            project_id: projectId,
+            content: content
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            hasUnsavedChanges = false;
+            const now = new Date().toLocaleTimeString();
+            
+            if ($('#save-status').length > 0) {
+                $('#save-status').html(`<i class="fas fa-check text-success"></i> Gespeichert um ${now}`);
+            }
+            
+            if (isManual) {
+                showTempMessage('✅ Erfolgreich gespeichert!', 'success');
+            }
+            
+            console.log('✅ Content wirklich gespeichert!');
+        } else {
+            throw new Error(data.error || 'Speichern fehlgeschlagen');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Fehler beim Speichern:', error);
         
         if ($('#save-status').length > 0) {
-            $('#save-status').html(`<i class="fas fa-check text-success"></i> Gespeichert um ${now}`);
+            $('#save-status').html(`<i class="fas fa-exclamation-triangle text-danger"></i> Speichern fehlgeschlagen`);
         }
         
         if (isManual) {
-            showTempMessage('Erfolgreich gespeichert!', 'success');
+            showTempMessage('❌ Speichern fehlgeschlagen: ' + error.message, 'danger');
         }
-        
-        console.log('✅ Content gespeichert (simuliert)');
-    }, 500);
+    });
 }
 
 function saveNow() {
