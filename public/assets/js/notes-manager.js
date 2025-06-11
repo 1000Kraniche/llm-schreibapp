@@ -710,4 +710,7 @@ $(document).ready(function() {
     });
 });
 
+
 console.log('📝 Notes-Manager.js geladen!');
+
+
