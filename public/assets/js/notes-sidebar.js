@@ -84,7 +84,7 @@ function renderNotesDropdown() {
         
         html += `
             <li>
-                <button class="dropdown-item ${isActive}" onclick="loadNoteIntoSidebar(${note.id})">
+                <button class="dropdown-item ${isActive}" data-note-id="${note.id}">
                     <div class="d-flex justify-content-between align-items-center">
                         <span>
                             <i class="fas fa-sticky-note text-info me-2"></i>
@@ -98,6 +98,14 @@ function renderNotesDropdown() {
     });
     
     container.innerHTML = html;
+    
+    // Event-Listener für alle Buttons hinzufügen
+    container.querySelectorAll('[data-note-id]').forEach(button => {
+        button.addEventListener('click', function() {
+            const noteId = parseInt(this.dataset.noteId);
+            loadNoteIntoSidebar(noteId);
+        });
+    });
 }
 
 // ====================================================
@@ -300,8 +308,18 @@ async function createNewNoteFromSidebar() {
         if (response.ok) {
             const newNote = await response.json();
             
-            // Zu den Notizen hinzufügen
+            // ZU BEIDEN Listen hinzufügen!
             sidebarNotes.unshift(newNote);
+            
+            // AUCH zu allNotes hinzufügen (für Modal-Sync)
+            if (typeof allNotes !== 'undefined') {
+                allNotes.unshift(newNote);
+            }
+            
+            // Modal-Liste auch aktualisieren
+            if (typeof renderNotesList === 'function') {
+                renderNotesList();
+            }
             
             // Neue Notiz direkt laden
             await loadNoteIntoSidebar(newNote.id);

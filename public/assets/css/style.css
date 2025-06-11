@@ -224,8 +224,8 @@ header ul {
   bottom: 0;
   display: flex;
   flex-direction: column;
-  width: 150px;
-  padding: 20px;
+  width: 200px;
+  padding: 15px;
   background: var(--fixed-menu-color);
 }
 
@@ -320,9 +320,9 @@ header ul {
 
 .top-banner {
   position: relative;
-  left: 150px;
+  left: 200px;
   display: flex;
-  width: calc(100% - 150px);
+  width: calc(100% - 200px);
   height: 100vh;
 
 }
