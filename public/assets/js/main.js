@@ -40,6 +40,12 @@ function initializeSummernoteEditor() {
             ['insert', ['link', 'picture', 'hr']],
             ['view', ['fullscreen', 'codeview']]
         ],
+        // WICHTIG: Diese Einstellungen helfen bei P-Tags
+        styleTags: ['p', 'blockquote', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+        defaultTextareaRows: 4,
+        lineHeights: ['0.2', '0.3', '0.4', '0.5', '0.6', '0.8', '1.0', '1.2', '1.4', '1.5', '2.0', '3.0'],
+        followingToolbar: false,
+        
         callbacks: {
             onChange: function(contents, $editable) {
                 hasUnsavedChanges = true;
@@ -51,6 +57,29 @@ function initializeSummernoteEditor() {
                     window.autoSaveTimer = setTimeout(function() {
                         saveContent(false); // false = kein manueller Save
                     }, 3000);
+                }
+            },
+            
+            // WICHTIG: Beim Fokus P-Tag setzen falls leer
+            onFocus: function() {
+                const content = $('#summernote-editor').summernote('code');
+                if (!content.trim() || content === '<br>' || content === '<div><br></div>') {
+                    $('#summernote-editor').summernote('code', '<p><br></p>');
+                }
+            },
+            
+            // WICHTIG: Nach Eingabe P-Tag korrigieren
+            onKeyup: function(e) {
+                const content = $('#summernote-editor').summernote('code');
+                
+                // Wenn nur Text ohne Tags, in P-Tag wrappen
+                if (content && !content.includes('<') && content.trim()) {
+                    $('#summernote-editor').summernote('code', '<p>' + content + '</p>');
+                }
+                
+                // Wenn nur BR-Tags, durch P ersetzen
+                if (content === '<br>' || content === '<div><br></div>') {
+                    $('#summernote-editor').summernote('code', '<p><br></p>');
                 }
             }
         }
@@ -65,9 +94,20 @@ function initializeSummernoteEditor() {
 // ====================================================
 
 function updateWordCount(content) {
-    const text = $(content).text();
-    const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
-    $('#word-count-number').text(wordCount);
+    try {
+        // Sicherer Weg, HTML zu Text zu konvertieren
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = content;
+        const text = tempDiv.textContent || tempDiv.innerText || '';
+        
+        const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+        $('#word-count-number').text(wordCount);
+        
+        console.log('📊 Wort-Count aktualisiert:', wordCount, 'für Text:', text.substring(0, 50));
+    } catch (error) {
+        console.error('❌ Fehler beim Wort-Count:', error);
+        $('#word-count-number').text('?');
+    }
 }
 
 function saveContent(isManual = true) {
@@ -117,7 +157,9 @@ function saveNow() {
 
 function showWordCount() {
     const content = $('#summernote-editor').summernote('code');
-    const text = $(content).text();
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    const text = tempDiv.textContent || tempDiv.innerText || '';
     const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
     const charCount = text.length;
     
@@ -174,77 +216,217 @@ function initializeLLMChat() {
 }
 
 // ====================================================
+// SCHNELLE PROJEKT-NOTIZEN (Sidebar)
+// ====================================================
+
+function saveQuickNote() {
+    console.log('🟡 saveQuickNote() gestartet');
+    
+    const noteText = $('#quick-note-input').val().trim();
+    console.log('📝 Notiz-Text:', noteText);
+    
+    if (!noteText) {
+        console.log('❌ Kein Text eingegeben');
+        showTempMessage('Bitte Text eingeben', 'warning');
+        return;
+    }
+    
+    const title = noteText.length > 30 ? noteText.substring(0, 30) + '...' : noteText;
+    console.log('📋 Notiz-Titel:', title);
+    console.log('🆔 Projekt-ID:', projectId);
+    
+    const requestData = {
+        title: title,
+        content: noteText,
+        project_id: parseInt(projectId)
+    };
+    console.log('📤 Sende an API:', requestData);
+    
+    fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => {
+        console.log('📥 API Response Status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('📥 API Response Data:', data);
+        if (data.id) {
+            $('#quick-note-input').val(''); // Leeren
+            showTempMessage('Notiz gespeichert!', 'success');
+            console.log('✅ Schnelle Notiz erfolgreich gespeichert, ID:', data.id);
+            
+            // WICHTIG: Notiz zu allNotes hinzufügen, falls Modal offen ist
+            if (allNotes && Array.isArray(allNotes)) {
+                allNotes.push(data);
+                console.log('📋 Notiz zu allNotes hinzugefügt');
+                
+                // Falls Modal offen ist, Liste aktualisieren
+                if ($('#notesModal').hasClass('show')) {
+                    console.log('🔄 Modal ist offen - Liste wird aktualisiert');
+                    renderNotesList();
+                }
+            }
+        } else {
+            showTempMessage('Fehler beim Speichern', 'danger');
+            console.log('❌ Fehler: Keine ID in Response');
+        }
+    })
+    .catch(error => {
+        console.log('❌ Fetch-Fehler:', error);
+        showTempMessage('Fehler: ' + error.message, 'danger');
+    });
+}
+
+function saveAsNote() {
+    console.log('🟡 saveAsNote() gestartet');
+    
+    const editorContent = $('#summernote-editor').summernote('code');
+    console.log('📝 Editor-Inhalt (HTML):', editorContent);
+    
+    // Sicherer Text-Extraktor
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = editorContent;
+    const textContent = (tempDiv.textContent || tempDiv.innerText || '').trim();
+    console.log('📝 Editor-Inhalt (Text):', textContent);
+    
+    if (!textContent) {
+        console.log('❌ Editor ist leer');
+        showTempMessage('Editor ist leer - nichts zu speichern', 'warning');
+        return;
+    }
+    
+    const title = prompt('Titel für die Notiz:', 'Notiz vom ' + new Date().toLocaleDateString());
+    if (!title) {
+        console.log('❌ Kein Titel eingegeben');
+        return;
+    }
+    
+    console.log('📋 Notiz-Titel:', title);
+    console.log('🆔 Projekt-ID:', projectId);
+    
+    const requestData = {
+        title: title.trim(),
+        content: editorContent,
+        project_id: parseInt(projectId)
+    };
+    console.log('📤 Sende an API:', requestData);
+    
+    fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => {
+        console.log('📥 API Response Status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('📥 API Response Data:', data);
+        if (data.id) {
+            showTempMessage('Editor-Inhalt als Notiz "' + title + '" gespeichert!', 'success');
+            console.log('✅ Editor-Notiz erfolgreich gespeichert, ID:', data.id);
+            
+            // WICHTIG: Notiz zu allNotes hinzufügen, falls Modal offen ist
+            if (allNotes && Array.isArray(allNotes)) {
+                allNotes.push(data);
+                console.log('📋 Notiz zu allNotes hinzugefügt');
+                
+                // Falls Modal offen ist, Liste aktualisieren
+                if ($('#notesModal').hasClass('show')) {
+                    console.log('🔄 Modal ist offen - Liste wird aktualisiert');
+                    renderNotesList();
+                }
+            }
+        } else {
+            showTempMessage('Fehler beim Speichern', 'danger');
+            console.log('❌ Fehler: Keine ID in Response');
+        }
+    })
+    .catch(error => {
+        console.log('❌ Fetch-Fehler:', error);
+        showTempMessage('Fehler: ' + error.message, 'danger');
+    });
+}
+
+// ====================================================
 // NOTIZEN MANAGEMENT
 // ====================================================
 
 async function loadNotes() {
+    console.log('🟡 loadNotes() gestartet');
+    console.log('🆔 Projekt-ID:', projectId);
+    
     if (!projectId) {
-        console.error('Keine Projekt-ID für Notizen-Load');
+        console.error('❌ Keine Projekt-ID für Notizen-Load');
         return;
     }
     
     try {
+        console.log('📤 Lade Notizen von:', '/api/notes/' + projectId);
         const response = await fetch('/api/notes/' + projectId);
+        console.log('📥 Response Status:', response.status);
+        
         if (response.ok) {
             allNotes = await response.json();
-            console.log('Notizen geladen:', allNotes);
+            console.log('✅ Notizen geladen:', allNotes);
+            console.log('📊 Anzahl Notizen:', allNotes.length);
             renderNotesList();
         } else {
-            console.error('Fehler beim Laden der Notizen:', response.status);
-            showEmptyState();
+            console.error('❌ Fehler beim Laden der Notizen, Status:', response.status);
+            showEmptyNotesState();
         }
     } catch (error) {
-        console.error('Fehler beim Laden der Notizen:', error);
-        showEmptyState();
+        console.error('❌ Fetch-Fehler beim Laden der Notizen:', error);
+        showEmptyNotesState();
     }
 }
 
 function renderNotesList() {
     const grid = $('#items-grid');
-    const currentNotes = allNotes.filter(note => note.parentId === currentFolderId);
+    
+    // Aktuelle Notizen/Ordner für den aktuellen Ordner filtern
+    const currentNotes = allNotes.filter(note => {
+        // Notizen ohne parentId sind Top-Level
+        return note.parentId === currentFolderId;
+    });
+    
+    console.log('Rendering Notizen für Ordner:', currentFolderId, 'Gefunden:', currentNotes.length);
     
     if (currentNotes.length === 0) {
-        showEmptyState();
+        showEmptyNotesState();
         return;
     }
     
     let html = '';
     
     currentNotes.forEach(note => {
-        if (note.type === 'folder') {
-            html += `
-                <div class="col-md-3 col-sm-4 col-6">
-                    <div class="card h-100 folder-card" onclick="navigateToFolder(${note.id})">
-                        <div class="card-body text-center p-3">
-                            <i class="fas fa-folder fa-2x text-warning mb-2"></i>
-                            <h6 class="card-title small">${escapeHtml(note.title)}</h6>
-                            <small class="text-muted">Ordner</small>
-                        </div>
+        const createdDate = new Date(note.created_at || Date.now()).toLocaleDateString('de-DE');
+        
+        html += `
+            <div class="col-md-3 col-sm-4 col-6">
+                <div class="card h-100 note-card" onclick="openNote(${note.id})">
+                    <div class="card-body text-center p-3">
+                        <i class="fas fa-sticky-note fa-2x text-info mb-2"></i>
+                        <h6 class="card-title small">${escapeHtml(note.title)}</h6>
+                        <small class="text-muted">${createdDate}</small>
                     </div>
                 </div>
-            `;
-        } else {
-            html += `
-                <div class="col-md-3 col-sm-4 col-6">
-                    <div class="card h-100 note-card" onclick="openNote(${note.id})">
-                        <div class="card-body text-center p-3">
-                            <i class="fas fa-sticky-note fa-2x text-info mb-2"></i>
-                            <h6 class="card-title small">${escapeHtml(note.title)}</h6>
-                            <small class="text-muted">Notiz</small>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+            </div>
+        `;
     });
     
     grid.html(html);
     $('#empty-folder').hide();
+    $('#notes-content').show();
 }
 
-function showEmptyState() {
+function showEmptyNotesState() {
     $('#items-grid').html('');
     $('#empty-folder').show();
+    $('#notes-content').show();
 }
 
 async function createNewNote() {
@@ -259,7 +441,7 @@ async function createNewNote() {
             },
             body: JSON.stringify({
                 title: title.trim(),
-                project_id: projectId,
+                project_id: parseInt(projectId),
                 parent_id: currentFolderId
             })
         });
@@ -283,10 +465,15 @@ async function createNewNote() {
 }
 
 async function openNote(noteId) {
+    console.log('🟡 openNote() gestartet für ID:', noteId);
+    
     try {
         const response = await fetch('/api/notes/' + noteId);
+        console.log('📥 Response Status:', response.status);
+        
         if (response.ok) {
             const note = await response.json();
+            console.log('📋 Geladene Notiz:', note);
             
             // Notizen-Liste verstecken, Editor anzeigen
             $('#notes-content').hide();
@@ -295,16 +482,22 @@ async function openNote(noteId) {
             // Notiz-Daten in Editor laden
             $('#current-note-title').text(note.title);
             $('#note-title-input').val(note.title);
-            $('#note-content').val(note.content || '');
+            
+            // WICHTIG: Content richtig anzeigen
+            const content = note.content || '';
+            $('#note-content').val(content);
+            console.log('📝 Content gesetzt:', content.substring(0, 100) + '...');
             
             // Aktuelle Notiz-ID speichern
             currentNoteId = noteId;
+            console.log('✅ Notiz erfolgreich geöffnet');
             
         } else {
+            console.error('❌ Fehler beim Laden, Status:', response.status);
             showTempMessage('Fehler beim Laden der Notiz', 'danger');
         }
     } catch (error) {
-        console.error('Fehler beim Laden der Notiz:', error);
+        console.error('❌ Fehler beim Laden der Notiz:', error);
         showTempMessage('Fehler beim Laden der Notiz: ' + error.message, 'danger');
     }
 }
@@ -365,8 +558,12 @@ function closeNoteEditor() {
 }
 
 function openNotesModal() {
+    console.log('🟡 openNotesModal() gestartet');
+    currentFolderId = null; // Start bei Top-Level
+    console.log('📁 Aktueller Ordner-ID:', currentFolderId);
     loadNotes(); // Echte Notizen aus DB laden
     $('#notesModal').modal('show');
+    console.log('📋 Modal geöffnet');
 }
 
 // ====================================================
@@ -401,6 +598,8 @@ function showTempMessage(message, type) {
 window.saveNow = saveNow;
 window.showWordCount = showWordCount;
 window.toggleAutoSave = toggleAutoSave;
+window.saveAsNote = saveAsNote;
+window.saveQuickNote = saveQuickNote;
 window.createNewNote = createNewNote;
 window.openNote = openNote;
 window.saveCurrentNote = saveCurrentNote;

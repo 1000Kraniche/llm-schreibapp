@@ -53,7 +53,8 @@ class NoteController extends AbstractController
         $note = new Note();
         $note->setTitle($data['title']);
         $note->setProject($project);
-        $note->setContent(''); // Initial leer
+        $content = isset($data['content']) ? $data['content'] : '';
+        $note->setContent($content);
         
         // Parent Note falls vorhanden
         if (isset($data['parent_id']) && $data['parent_id']) {

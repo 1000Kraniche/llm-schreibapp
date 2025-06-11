@@ -11,47 +11,77 @@
     <!-- Neues Projekt -->
     <div class="col-12 col-sm-6 col-md-4 col-lg-3">
       <div class="card h-100 border-0 text-center shadow-sm d-flex align-items-center justify-content-center" style="height: 200px;">
-        <a href="#" class="text-decoration-none text-primary fs-1">+</a>
+        <a href="{{ path('project_create') }}" class="text-decoration-none text-primary fs-1">+</a>
         <p class="mt-2 mb-0">Neues Projekt</p>
       </div>
     </div>
 
-    <!-- Beispielprojekt 1 -->
+    <!-- Echte Projekte aus der Datenbank -->
+    {% for project in projects %}
     <div class="col-12 col-sm-6 col-md-4 col-lg-3">
       <div class="card h-100 shadow-sm">
         <div class="card-body">
-          <h6 class="card-title">Projekt: Marktdaten 2025</h6>
-          <p class="card-text text-muted">Geöffnet 02.05.2025</p>
+          <h6 class="card-title">{{ project.title }}</h6>
+          <p class="card-text text-muted">
+            {% if project.description %}
+              {{ project.description|length > 50 ? project.description|slice(0, 50) ~ '...' : project.description }}
+            {% else %}
+              Keine Beschreibung
+            {% endif %}
+          </p>
+          <p class="card-text">
+            <small class="text-muted">Erstellt {{ project.createdAt|date('d.m.Y') }}</small>
+          </p>
+          <div class="d-flex justify-content-between">
+            <a href="{{ path('workspace', {projectId: project.id}) }}" class="btn btn-primary btn-sm">
+              <i class="fas fa-edit"></i> Bearbeiten
+            </a>
+            <div class="btn-group btn-group-sm">
+              <a href="{{ path('project_edit', {id: project.id}) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-cog"></i>
+              </a>
+              <button class="btn btn-outline-danger btn-sm" onclick="deleteProject({{ project.id }}, '{{ project.title|e('js') }}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+    {% endfor %}
 
-    <!-- Beispielprojekt 2 -->
-    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h6 class="card-title">Projekt: Bericht KI-Ethik</h6>
-          <p class="card-text text-muted">Geöffnet 28.04.2025</p>
-        </div>
+    <!-- Falls keine Projekte vorhanden -->
+    {% if projects is empty %}
+    <div class="col-12">
+      <div class="text-center py-5">
+        <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Noch keine Projekte vorhanden</h5>
+        <p class="text-muted">Erstelle dein erstes Projekt, um loszulegen!</p>
+        <a href="{{ path('project_create') }}" class="btn btn-primary">
+          <i class="fas fa-plus"></i> Erstes Projekt erstellen
+        </a>
       </div>
     </div>
+    {% endif %}
 
-    <!-- Beispielprojekt 3 -->
-    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h6 class="card-title">Projekt: Text Text Text</h6>
-          <p class="card-text text-muted">Geöffnet 25.04.2025</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Weitere Projekte einfach durch Kopieren weiterer .col-Elemente -->
   </div>
 </div>
 
   </main>
 
 	<script type="module" src="{{ asset('build/editor.js') }}"></script>
+
+  <script>
+  function deleteProject(projectId, projectTitle) {
+    if (confirm('Projekt "' + projectTitle + '" wirklich löschen?')) {
+      // Form erstellen und absenden
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/project/' + projectId + '/delete';
+      document.body.appendChild(form);
+      form.submit();
+    }
+  }
+  </script>
 
 {% endblock %}

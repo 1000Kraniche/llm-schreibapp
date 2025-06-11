@@ -11,39 +11,53 @@
         <div class="col-12 col-md-8 d-flex flex-column editor-side">
           <div class="flex-grow-1 d-flex flex-column">
             
-            {# Editor-Toolbar #}
+            {# Projekt-Name über Editor #}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="mb-0 text-primary">
+                <i class="fas fa-folder-open"></i> {{ project.title }}
+              </h5>
+              <a href="{{ path('project_list') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Zurück
+              </a>
+            </div>
+            
+            {# Editor-Toolbar (kompakter) #}
             <div class="mb-3 d-flex justify-content-between">
-              <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-success btn-sm" onclick="saveNow()">
+              <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-success" onclick="saveNow()">
                   <i class="fas fa-save"></i> Speichern
                 </button>
-                <button type="button" class="btn btn-outline-info btn-sm" onclick="showWordCount()">
+                <button type="button" class="btn btn-outline-info" onclick="showWordCount()">
                   <i class="fas fa-chart-bar"></i> Statistik
                 </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAutoSave()">
-                  <i class="fas fa-robot"></i> <span id="autosave-status">Auto-Save: Ein</span>
+                <button type="button" class="btn btn-outline-secondary" onclick="toggleAutoSave()">
+                  <i class="fas fa-robot"></i> Auto-Save
                 </button>
               </div>
               
-              <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-warning btn-sm" onclick="saveAsNote()">
+              <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-primary" onclick="openNotesModal()">
+                  <i class="fas fa-edit"></i> Notizen
+                </button>
+                <button type="button" class="btn btn-outline-warning" onclick="saveAsNote()">
                   <i class="fas fa-sticky-note"></i> Als Notiz
                 </button>
-                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#notesModal">
-                  <i class="fas fa-edit"></i> Notizen bearbeiten
-                </button>
-              </div>
-              
-              <div class="btn-group" role="group">
-                <a href="{{ path('project_list') }}" class="btn btn-outline-secondary btn-sm">
-                  <i class="fas fa-arrow-left"></i> Zurück
-                </a>
               </div>
             </div>
 
-            {# Summernote Editor #}
-            <div id="summernote-editor" class="h-100">
-              {{ text_document ? text_document.content|raw : '<h1>Neues Dokument</h1><p>Beginne hier zu schreiben...</p>' }}
+            {# Summernote Editor mit Projekt-Name als Standard-Inhalt #}
+            <div id="summernote-editor" class="h-100" data-project-id="{{ project.id }}" data-document-id="{{ text_document ? text_document.id : '' }}">
+              {% if text_document and text_document.content %}
+                {{ text_document.content|raw }}
+              {% else %}
+                <h1>{{ project.title }}</h1>
+                <p>Beginne hier mit deinem Projekt zu schreiben...</p>
+                {% if project.description %}
+                  <blockquote>
+                    <p><em>{{ project.description }}</em></p>
+                  </blockquote>
+                {% endif %}
+              {% endif %}
             </div>
           </div>
         </div>
@@ -57,8 +71,8 @@
             <div class="p-2">
               <div id="project-notes">
                 <p class="small text-muted">Hier könnten deine Projekt-Notizen stehen...</p>
-                <textarea class="form-control form-control-sm" rows="4" placeholder="Schnelle Notiz hinzufügen..."></textarea>
-                <button class="btn btn-outline-primary btn-sm mt-2 w-100">
+                <textarea id="quick-note-input" class="form-control form-control-sm" rows="4" placeholder="Schnelle Notiz hinzufügen..."></textarea>
+                <button class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="saveQuickNote()">
                   <i class="fas fa-plus"></i> Notiz speichern
                 </button>
               </div>
@@ -137,66 +151,22 @@
                   <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="mb-0" id="current-folder-title">📁 Projekt Notizen</h6>
                     <div class="btn-group btn-group-sm">
-                      <button class="btn btn-outline-primary" onclick="createNewFolder()">
-                        <i class="fas fa-folder-plus"></i> Ordner
-                      </button>
                       <button class="btn btn-outline-success" onclick="createNewNote()">
                         <i class="fas fa-plus"></i> Notiz
                       </button>
                     </div>
                   </div>
                   
-                  {# Ordner und Notizen Liste #}
+                  {# Ordner und Notizen Liste - wird dynamisch befüllt #}
                   <div id="notes-content" class="border rounded p-3" style="height: 300px; overflow-y: auto;">
                     <div class="row g-3" id="items-grid">
-                      
-                      {# Ordner #}
-                      <div class="col-md-3 col-sm-4 col-6">
-                        <div class="card h-100 folder-card" onclick="navigateToFolder(1)">
-                          <div class="card-body text-center p-3">
-                            <i class="fas fa-folder fa-2x text-warning mb-2"></i>
-                            <h6 class="card-title small">Charaktere</h6>
-                            <small class="text-muted">3 Notizen</small>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div class="col-md-3 col-sm-4 col-6">
-                        <div class="card h-100 folder-card" onclick="navigateToFolder(2)">
-                          <div class="card-body text-center p-3">
-                            <i class="fas fa-folder fa-2x text-warning mb-2"></i>
-                            <h6 class="card-title small">Recherche</h6>
-                            <small class="text-muted">1 Notiz</small>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {# Notizen #}
-                      <div class="col-md-3 col-sm-4 col-6">
-                        <div class="card h-100 note-card" onclick="openNote(1)">
-                          <div class="card-body text-center p-3">
-                            <i class="fas fa-sticky-note fa-2x text-info mb-2"></i>
-                            <h6 class="card-title small">Schnelle Ideen</h6>
-                            <small class="text-muted">27.05.2025</small>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div class="col-md-3 col-sm-4 col-6">
-                        <div class="card h-100 note-card" onclick="openNote(2)">
-                          <div class="card-body text-center p-3">
-                            <i class="fas fa-sticky-note fa-2x text-success mb-2"></i>
-                            <h6 class="card-title small">Plot Outline</h6>
-                            <small class="text-muted">26.05.2025</small>
-                          </div>
-                        </div>
-                      </div>
+                      {# Wird von JavaScript befüllt #}
                     </div>
                     
                     {# Leerer Zustand #}
-                    <div id="empty-folder" class="text-center text-muted py-5" style="display: none;">
+                    <div id="empty-folder" class="text-center text-muted py-5">
                       <i class="fas fa-folder-open fa-3x mb-3"></i>
-                      <p>Dieser Ordner ist leer.<br>Erstelle eine neue Notiz oder einen Unterordner.</p>
+                      <p>Noch keine Notizen vorhanden.<br>Erstelle deine erste Notiz für dieses Projekt!</p>
                     </div>
                   </div>
                 </div>
@@ -253,7 +223,7 @@
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-de-DE.min.js"></script>
 
 {# Unsere Main.js einbinden #}
-<script src="{{ asset('assets/js/main.js') }}"></script>
+<script src="{{ asset('build/main.js') }}"></script>
   <style>
   .folder-card, .note-card {
     cursor: pointer;

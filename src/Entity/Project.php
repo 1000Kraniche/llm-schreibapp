@@ -95,12 +95,12 @@ class Project
         return $this;
     }
 
-    public function getOwner(): ?Appuser
+    public function getOwner(): ?AppUser
     {
         return $this->owner;
     }
 
-    public function setOwner(?Appuser $owner): static
+    public function setOwner(?AppUser $owner): static
     {
         $this->owner = $owner;
         return $this;
