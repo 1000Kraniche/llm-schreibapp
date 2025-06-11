@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class NoteController extends AbstractController
 {
-    #[Route('/api/notes/{projectId}', name: 'api_notes_list', methods: ['GET'])]
+    #[Route('/api/notes/project/{projectId}', name: 'api_notes_list', methods: ['GET'])]
     public function listNotes(int $projectId, NoteRepository $noteRepository): JsonResponse
     {
         $notes = $noteRepository->findBy(['project' => $projectId]);
@@ -53,8 +53,7 @@ class NoteController extends AbstractController
         $note = new Note();
         $note->setTitle($data['title']);
         $note->setProject($project);
-        $content = isset($data['content']) ? $data['content'] : '';
-        $note->setContent($content);
+        $note->setContent($data['content'] ?? ''); // Content optional
         
         // Parent Note falls vorhanden
         if (isset($data['parent_id']) && $data['parent_id']) {
@@ -127,5 +126,43 @@ class NoteController extends AbstractController
             'type' => 'note',
             'parentId' => $note->getParentNote() ? $note->getParentNote()->getId() : null
         ]);
+    }
+    
+    #[Route('/api/notes/{id}', name: 'api_notes_delete', methods: ['DELETE'])]
+    public function deleteNote(
+        int $id, 
+        NoteRepository $noteRepository,
+        EntityManagerInterface $em
+    ): JsonResponse 
+    {
+        $note = $noteRepository->find($id);
+        
+        if (!$note) {
+            return new JsonResponse(['error' => 'Notiz nicht gefunden'], 404);
+        }
+        
+        // Prüfe ob die Notiz Child-Notizen hat
+        $childNotes = $note->getChildNotes();
+        if ($childNotes->count() > 0) {
+            return new JsonResponse([
+                'error' => 'Diese Notiz kann nicht gelöscht werden, da sie Unter-Notizen enthält.'
+            ], 400);
+        }
+        
+        $noteTitle = $note->getTitle();
+        
+        try {
+            $em->remove($note);
+            $em->flush();
+            
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Notiz "' . $noteTitle . '" wurde erfolgreich gelöscht.'
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'error' => 'Fehler beim Löschen der Notiz: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
