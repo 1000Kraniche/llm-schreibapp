@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}LLM Schreibapp{% endblock %}</title>
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" href="{{ asset('assets/img/favicon/favicon-96x96.png') }}" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="{{ asset('assets/img/favicon/favicon.svg') }}" />
+  <link rel="shortcut icon" href="{{ asset('assets/img/favicon/favicon.ico') }}" />
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/favicon/apple-touch-icon.png') }}" />
+  <meta name="apple-mobile-web-app-title" content="LLM Schreibapp" />
+  <link rel="manifest" href="{{ asset('assets/img/favicon/site.webmanifest') }}" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}" />
+  <link rel="stylesheet" href="{{ asset('assets/css/bootstrap-icons.min.css') }}" />
+  <link rel="stylesheet" href="{{ asset('assets/css/fontawesome.min.css') }}" />
+  <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}" />
+  <link rel="stylesheet" href="{{ asset('assets/css/editor.css') }}" />
+  <link rel="stylesheet" href="{{ asset('assets/css/summernote-custom.css') }}">
+</head>
+<body>
+<header>
+  <nav class="top-nav">
+    <div class="menu-wrapper">
+      <ul class="menu">
+        <li>
+          <a href="{{ path('home') }}">Home</a>
+        </li>
+        <li>
+          <a href="{{ path('project_list') }}">Projekte</a>
+          <ul class="sub-menu">
+            <li>
+              <a href="{{ path('workspace_demo') }}">Demo Workspace</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a href="{{ path('help') }}">Hilfe</a>
+        </li>
+      </ul>
+      
+      <!-- Footer Links -->
+      <div class="menu-footer mt-auto pt-3">
+        <ul class="menu legalthings">
+          <li>
+            <a href="{{ path('datenschutz') }}" class="small">Datenschutz</a>
+          </li>
+          <li>
+            <a href="{{ path('impressum') }}" class="small">Impressum</a>
+          </li>
+        </ul>
+      </div>
+      
+      <button class="menu-close" type="button" aria-label="close menu">✕</button>
+    </div>
+    <div class="fixed-menu">
+      <h1 class="logo">
+        <a href="{% if app.user %}{{ path('project_list') }}{% else %}{{ path('home') }}{% endif %}">
+          <i class="fa-solid fa-paragraph"></i>
+        </a>
+      </h1>
+      <button class="menu-toggle" type="button" aria-label="toggle menu">☰</button>
+      <ul class="socials">
+        {% if app.user %}
+        <li class"profi-icon">
+          <a href="{{ path('profile') }}">
+            <i class="fas fa-user-circle fa-3x d-block mb-1"></i>
+            {{ app.user.userName }}
+          </a>
+        </li>
+        <li>
+          <a href="{{ path('settings') }}"><i class="fas fa-cog"></i> Einstellungen</a>
+        </li>
+        <li>
+          <a href="{{ path('app_logout') }}"><i class="fas fa-sign-out-alt"></i> Abmelden</a>
+        </li>
+        {% else %}
+        <li>
+          <a href="{{ path('app_login') }}"><i class="fas fa-sign-in-alt"></i> Anmelden</a>
+        </li>
+        <li>
+          <a href="{{ path('app_register') }}"><i class="fas fa-user-plus"></i> Registrieren</a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </nav>
+</header>
+
+<section class="top-banner">

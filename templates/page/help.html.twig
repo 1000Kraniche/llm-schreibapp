@@ -1,0 +1,260 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hilfe{% endblock %}
+
+{% block body %}
+<main class="vh-100 vw-100 pt-3 pb-3">
+  <section class="container-fluid h-100">
+    <div class="row h-100">
+      <div class="col-lg-8 mx-auto">
+        
+        <!-- Header -->
+        <div class="text-center mb-4">
+          <h1 class="display-6 fw-bold text-primary">
+            <i class="fas fa-question-circle me-3"></i>Hilfe & Support
+          </h1>
+          <p class="lead text-muted">Alles was du über die LLM Schreibapp wissen musst</p>
+        </div>
+
+        <!-- LLM Status Check -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-robot me-2"></i>LLM Status Check
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-md-8">
+                <p class="mb-2">
+                  <strong>Überprüfe die Verbindung zu deinem lokalen LLM-Server:</strong>
+                </p>
+                <p class="text-muted small mb-0">
+                  Der KI-Assistent benötigt eine Verbindung zu Ollama auf localhost:11434
+                </p>
+              </div>
+              <div class="col-md-4 text-end">
+                <button id="check-llm-btn" class="btn btn-primary" onclick="checkLLMStatus()">
+                  <i class="fas fa-search me-2"></i>Status prüfen
+                </button>
+              </div>
+            </div>
+            
+            <!-- Status Display -->
+            <div id="llm-status" class="mt-3" style="display: none;">
+              <div id="status-content" class="p-3 rounded border">
+                <div class="d-flex align-items-center">
+                  <div class="spinner-border spinner-border-sm me-2" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <span>LLM wird geprüft...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ Accordion -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-lightbulb me-2"></i>Häufige Fragen (FAQ)
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="accordion accordion-flush" id="faqAccordion">
+              
+              <!-- FAQ 1 -->
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="faq1">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+                    <i class="fas fa-edit me-2"></i>Wie funktioniert der Editor?
+                  </button>
+                </h2>
+                <div id="collapse1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                  <div class="accordion-body">
+                    <p>Der Editor basiert auf Summernote und bietet folgende Features:</p>
+                    <ul>
+                      <li><strong>Rich-Text Formatierung:</strong> Fett, Kursiv, Überschriften, Listen</li>
+                      <li><strong>Auto-Save:</strong> Speichert automatisch alle 3 Sekunden</li>
+                      <li><strong>Wort-Zähler:</strong> Zeigt aktuelle Statistiken</li>
+                      <li><strong>Bilder & Tabellen:</strong> Vollständige Multimedia-Unterstützung</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- FAQ 2 -->
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="faq2">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+                    <i class="fas fa-robot me-2"></i>Wie nutze ich den KI-Assistenten?
+                  </button>
+                </h2>
+                <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                  <div class="accordion-body">
+                    <p>Der KI-Assistent hilft dir beim Schreiben:</p>
+                    <ul>
+                      <li><strong>Eingabe:</strong> Stelle eine Frage im Chat-Feld rechts</li>
+                      <li><strong>Enter-Taste:</strong> Drücke Enter um die Frage zu senden</li>
+                      <li><strong>Kontext:</strong> Die KI kennt dein aktuelles Projekt</li>
+                      <li><strong>Einfügen:</strong> Antworten können direkt in den Editor eingefügt werden</li>
+                    </ul>
+                    <div class="alert alert-info">
+                      <i class="fas fa-info-circle me-2"></i>
+                      <strong>Tipp:</strong> Frage spezifisch nach Charakterentwicklung, Plot-Ideen oder Dialogen!
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- FAQ 3 -->
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="faq3">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+                    <i class="fas fa-sticky-note me-2"></i>Wie organisiere ich meine Notizen?
+                  </button>
+                </h2>
+                <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                  <div class="accordion-body">
+                    <p>Das Notizen-System hilft bei der Organisation:</p>
+                    <ul>
+                      <li><strong>Projekt-Notizen:</strong> Jedes Projekt hat eigene Notizen</li>
+                      <li><strong>Ordner-Struktur:</strong> Erstelle Ordner für Charaktere, Recherche, etc.</li>
+                      <li><strong>Schnell-Notizen:</strong> Direkt im Workspace hinzufügen</li>
+                      <li><strong>Verknüpfung:</strong> Notizen mit dem Haupttext verknüpfen</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- FAQ 4 -->
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="faq4">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
+                    <i class="fas fa-cog me-2"></i>LLM funktioniert nicht - was tun?
+                  </button>
+                </h2>
+                <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                  <div class="accordion-body">
+                    <p>Checke folgende Punkte wenn der KI-Assistent nicht funktioniert:</p>
+                    <ol>
+                      <li><strong>Ollama läuft:</strong> <code>ollama serve</code> im Terminal</li>
+                      <li><strong>Modell geladen:</strong> <code>ollama pull openhermes</code></li>
+                      <li><strong>Port frei:</strong> localhost:11434 erreichbar</li>
+                      <li><strong>Docker:</strong> Container kann auf Host zugreifen</li>
+                    </ol>
+                    <div class="alert alert-warning">
+                      <i class="fas fa-exclamation-triangle me-2"></i>
+                      <strong>Noch Probleme?</strong> Nutze den Status-Check oben auf dieser Seite!
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Keyboard Shortcuts -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-keyboard me-2"></i>Tastatur-Shortcuts
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <h6 class="fw-bold">Editor:</h6>
+                <ul class="list-unstyled">
+                  <li><kbd>Ctrl</kbd> + <kbd>B</kbd> - Fett</li>
+                  <li><kbd>Ctrl</kbd> + <kbd>I</kbd> - Kursiv</li>
+                  <li><kbd>Ctrl</kbd> + <kbd>S</kbd> - Speichern</li>
+                  <li><kbd>Ctrl</kbd> + <kbd>Z</kbd> - Rückgängig</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h6 class="fw-bold">KI-Chat:</h6>
+                <ul class="list-unstyled">
+                  <li><kbd>Enter</kbd> - Nachricht senden</li>
+                  <li><kbd>Shift</kbd> + <kbd>Enter</kbd> - Neue Zeile</li>
+                  <li><kbd>Esc</kbd> - Chat leeren</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact/Support -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title">
+              <i class="fas fa-life-ring me-2"></i>Weitere Hilfe benötigt?
+            </h5>
+            <p class="card-text text-muted">
+              Diese App wurde als Uni-Projekt entwickelt. Bei technischen Problemen schau in die Dokumentation.
+            </p>
+            <div class="d-flex gap-2 justify-content-center">
+              <a href="{{ path('home') }}" class="btn btn-outline-primary">
+                <i class="fas fa-home me-2"></i>Zur Startseite
+              </a>
+              <a href="{{ path('project_list') }}" class="btn btn-primary">
+                <i class="fas fa-folder me-2"></i>Meine Projekte
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- LLM Status Check JavaScript -->
+<script>
+async function checkLLMStatus() {
+    const btn = document.getElementById('check-llm-btn');
+    const statusDiv = document.getElementById('llm-status');
+    const statusContent = document.getElementById('status-content');
+    
+    // Button disabled, Status anzeigen
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Prüfe...';
+    statusDiv.style.display = 'block';
+    
+    try {
+        const response = await fetch('/api/llm/status');
+        const data = await response.json();
+        
+        if (data.status === 'online') {
+            statusContent.innerHTML = `
+                <div class="text-success">
+                    <i class="fas fa-check-circle fa-2x mb-3"></i>
+                    <h6>✅ LLM ist online und bereit!</h6>
+                    <p class="mb-2">Verfügbare Modelle: ${data.models?.models?.length || 'Unbekannt'}</p>
+                    <small class="text-muted">Verbindung zu Ollama erfolgreich</small>
+                </div>
+            `;
+        } else {
+            throw new Error(data.message || 'LLM nicht erreichbar');
+        }
+    } catch (error) {
+        statusContent.innerHTML = `
+            <div class="text-danger">
+                <i class="fas fa-times-circle fa-2x mb-3"></i>
+                <h6>❌ LLM ist offline</h6>
+                <p class="mb-2">Fehler: ${error.message}</p>
+                <small class="text-muted">
+                    Stelle sicher dass Ollama läuft: <code>ollama serve</code>
+                </small>
+            </div>
+        `;
+    }
+    
+    // Button zurücksetzen
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-search me-2"></i>Erneut prüfen';
+}
+</script>
+{% endblock %}

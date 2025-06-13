@@ -1,0 +1,126 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Projekt bearbeiten - {{ project.title }}{% endblock %}
+
+{% block body %}
+<main class="vh-100 vw-100 pt-3 pb-3">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        
+        <div class="card shadow">
+          <div class="card-header bg-warning text-dark">
+            <h4 class="mb-0">
+              <i class="fas fa-edit"></i> Projekt bearbeiten
+            </h4>
+          </div>
+          
+          <div class="card-body">
+            
+            {# Flash Messages #}
+            {% for type, messages in app.flashes %}
+              {% for message in messages %}
+                <div class="alert alert-{{ type == 'error' ? 'danger' : type }} alert-dismissible fade show">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+              {% endfor %}
+            {% endfor %}
+
+            <form action="{{ path('project_update', {slug: project.slug}) }}" method="POST">
+              
+              <div class="mb-3">
+                <label for="title" class="form-label">
+                  <i class="fas fa-heading"></i> Projekt-Titel *
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="title" 
+                  name="title" 
+                  value="{{ project.title }}"
+                  required
+                  maxlength="255"
+                  autofocus
+                />
+              </div>
+
+              <div class="mb-4">
+                <label for="description" class="form-label">
+                  <i class="fas fa-align-left"></i> Beschreibung (optional)
+                </label>
+                <textarea 
+                  class="form-control" 
+                  id="description" 
+                  name="description" 
+                  rows="4"
+                  maxlength="1000"
+                >{{ project.description }}</textarea>
+              </div>
+
+              <div class="mb-3">
+                <small class="text-muted">
+                  <i class="fas fa-calendar"></i> Erstellt: {{ project.createdAt|date('d.m.Y H:i') }}
+                </small>
+              </div>
+
+              <div class="d-flex justify-content-between">
+                <div>
+                  <a href="{{ path('project_list') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Zurück
+                  </a>
+                  
+                  <a href="{{ path('workspace', {slug: project.slug}) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-edit"></i> Zum Editor
+                  </a>
+                </div>
+                
+                <div>
+                  <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="fas fa-trash"></i> Löschen
+                  </button>
+                  
+                  <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-save"></i> Speichern
+                  </button>
+                </div>
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+{# Lösch-Bestätigung Modal #}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteModalLabel">
+          <i class="fas fa-exclamation-triangle"></i> Projekt löschen
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Achtung:</strong> Das Projekt "{{ project.title }}" wird unwiderruflich gelöscht!</p>
+        <p>Alle zugehörigen Dokumente, Notizen und LLM-Unterhaltungen gehen verloren.</p>
+        <p>Diese Aktion kann nicht rückgängig gemacht werden.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+        
+        <form action="{{ path('project_delete', {slug: project.slug}) }}" method="POST" style="display: inline;">
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Endgültig löschen
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

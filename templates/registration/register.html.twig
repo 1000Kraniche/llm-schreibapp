@@ -1,0 +1,119 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Registrieren{% endblock %}
+
+{% block body %}
+<main class="vh-100 vw-100 pt-3 pb-3">
+  <section class="container-fluid h-100">
+    <div class="row h-100 align-items-center justify-content-center">
+      <div class="col-lg-4 col-md-6 col-sm-8">
+        
+        <!-- Register Card -->
+        <div class="card border-0 shadow">
+          <div class="card-body p-4">
+            
+            <!-- Header -->
+            <div class="text-center mb-4">
+              <i class="fas fa-user-plus fa-3x text-success mb-3"></i>
+              <h3 class="card-title fw-bold">Registrieren</h3>
+              <p class="text-muted">Erstelle deinen Account für die LLM Schreibapp</p>
+            </div>
+
+            <!-- Form Errors -->
+            {{ form_errors(registrationForm) }}
+
+            <!-- Registration Form -->
+            {{ form_start(registrationForm) }}
+              
+              <!-- Username -->
+              <div class="mb-3">
+                <label for="{{ registrationForm.userName.vars.id }}" class="form-label">
+                  <i class="fas fa-user me-2"></i>Benutzername
+                </label>
+                {{ form_widget(registrationForm.userName, {
+                  'attr': {
+                    'class': 'form-control',
+                    'placeholder': 'Dein Benutzername'
+                  }
+                }) }}
+                {{ form_errors(registrationForm.userName) }}
+              </div>
+              
+              <!-- Email -->
+              <div class="mb-3">
+                <label for="{{ registrationForm.email.vars.id }}" class="form-label">
+                  <i class="fas fa-envelope me-2"></i>E-Mail
+                </label>
+                {{ form_widget(registrationForm.email, {
+                  'attr': {
+                    'class': 'form-control',
+                    'placeholder': 'deine@email.de'
+                  }
+                }) }}
+                {{ form_errors(registrationForm.email) }}
+              </div>
+              
+              <!-- Password -->
+              <div class="mb-3">
+                <label for="{{ registrationForm.plainPassword.vars.id }}" class="form-label">
+                  <i class="fas fa-lock me-2"></i>Passwort
+                </label>
+                {{ form_widget(registrationForm.plainPassword, {
+                  'attr': {
+                    'class': 'form-control',
+                    'placeholder': 'Mindestens 6 Zeichen'
+                  }
+                }) }}
+                {{ form_errors(registrationForm.plainPassword) }}
+                <div class="form-text">
+                  <i class="fas fa-info-circle me-1"></i>
+                  Das Passwort sollte mindestens 6 Zeichen lang sein.
+                </div>
+              </div>
+              
+              <!-- Terms Agreement -->
+              <div class="mb-3 form-check">
+                {{ form_widget(registrationForm.agreeTerms, {
+                  'attr': {
+                    'class': 'form-check-input'
+                  }
+                }) }}
+                <label for="{{ registrationForm.agreeTerms.vars.id }}" class="form-check-label">
+                  <i class="fas fa-check-square me-1"></i>
+                  Ich stimme den Nutzungsbedingungen zu
+                </label>
+                {{ form_errors(registrationForm.agreeTerms) }}
+              </div>
+              
+              <!-- Submit Button -->
+              <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-success btn-lg">
+                  <i class="fas fa-user-plus me-2"></i>Account erstellen
+                </button>
+              </div>
+              
+            {{ form_end(registrationForm) }}
+            
+            <!-- Login Link -->
+            <div class="text-center">
+              <p class="text-muted">Bereits ein Account?</p>
+              <a href="{{ path('app_login') }}" class="btn btn-outline-primary">
+                <i class="fas fa-sign-in-alt me-2"></i>Jetzt anmelden
+              </a>
+            </div>
+            
+          </div>
+        </div>
+        
+        <!-- Back to Home -->
+        <div class="text-center mt-3">
+          <a href="{{ path('home') }}" class="text-muted text-decoration-none">
+            <i class="fas fa-arrow-left me-2"></i>Zurück zur Startseite
+          </a>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Projekt Übersicht
+{% endblock %}
+
+{% block body %}
+  <main class="vh-100 vw-100 pt-3 pb-3 project-site">
+<div class="container py-5">
+  <div class="row g-4">
+
+    <!-- Neues Projekt -->
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+      <div class="card h-100 border-0 text-center shadow-sm d-flex align-items-center justify-content-center" style="height: 300px;" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+        <a href="#" class="text-decoration-none text-primary fs-1">+</a>
+        <p class="mt-2 mb-0">Neues Projekt</p>
+      </div>
+    </div>
+
+    <!-- Echte Projekte aus der Datenbank -->
+    {% for project in projects %}
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title">{{ project.title }}</h6>
+          <p class="card-text text-muted">
+            {% if project.description %}
+              {{ project.description|length > 200 ? project.description|slice(0, 200) ~ '...' : project.description }}
+            {% else %}
+              Keine Beschreibung
+            {% endif %}
+          </p>
+          <p class="card-text">
+            <small class="text-muted">Erstellt {{ project.createdAt|date('d.m.Y') }}</small>
+          </p>
+          <div class="d-flex justify-content-between">
+            <a href="{{ path('workspace', {slug: project.slug}) }}" class="btn btn-primary btn-sm">
+              <i class="fas fa-edit"></i> Bearbeiten
+            </a>
+            <div class="btn-group btn-group-sm">
+              <a href="{{ path('project_edit', {slug: project.slug}) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-cog"></i>
+              </a>
+              <button class="btn btn-outline-danger btn-sm" onclick="deleteProject('{{ project.slug }}', '{{ project.title|e('js') }}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    <!-- Falls keine Projekte vorhanden -->
+    {% if projects is empty %}
+    <div class="col-12">
+      <div class="text-center py-5">
+        <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Noch keine Projekte vorhanden</h5>
+        <p class="text-muted">Erstelle dein erstes Projekt, um loszulegen!</p>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+          <i class="fas fa-plus"></i> Erstes Projekt erstellen
+        </button>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+  </main>
+
+<!-- Create Project Modal -->
+<div class="modal fade" id="createProjectModal" tabindex="-1" aria-labelledby="createProjectModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createProjectModalLabel">
+          <i class="fas fa-plus-circle me-2"></i>Neues Projekt erstellen
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="createProjectForm">
+          <div class="mb-3">
+            <label for="projectTitle" class="form-label">Projekt-Titel</label>
+            <input type="text" class="form-control" id="projectTitle" placeholder="z.B. Mein neuer Roman" required>
+          </div>
+          <div class="mb-3">
+            <label for="projectDescription" class="form-label">Beschreibung (optional)</label>
+            <textarea class="form-control" id="projectDescription" rows="3" placeholder="Worum geht es in deinem Projekt?"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+        <button type="button" class="btn btn-primary" onclick="createNewProject()">
+          <i class="fas fa-plus me-2"></i>Projekt erstellen
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="{{ asset('build/editor.js') }}"></script>
+
+<script>
+// Neues Projekt erstellen
+async function createNewProject() {
+    const title = document.getElementById('projectTitle').value.trim();
+    const description = document.getElementById('projectDescription').value.trim();
+    
+    if (!title) {
+        alert('Bitte gib einen Projekt-Titel ein!');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/project/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            window.location.href = data.project.workspace_url;
+        } else {
+            alert('Fehler: ' + (data.error || 'Unbekannter Fehler'));
+        }
+    } catch (error) {
+        alert('Fehler beim Erstellen: ' + error.message);
+    }
+}
+
+// Projekt bearbeiten
+function editProject(slug, title) {
+    // TODO: Edit-Modal oder separate Seite
+    alert('Projekt-Bearbeitung für "' + title + '" kommt bald!');
+}
+
+// Projekt löschen
+async function deleteProject(slug, title) {
+    if (!confirm('Projekt "' + title + '" wirklich löschen?\n\nAlle Texte und Notizen gehen verloren!')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/project/' + slug + '/delete', {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            location.reload(); // Seite neu laden
+        } else {
+            alert('Fehler beim Löschen: ' + (data.error || 'Unbekannter Fehler'));
+        }
+    } catch (error) {
+        alert('Fehler beim Löschen: ' + error.message);
+    }
+}
+
+// Modal reset
+document.getElementById('createProjectModal').addEventListener('show.bs.modal', function() {
+    document.getElementById('createProjectForm').reset();
+    document.getElementById('projectTitle').focus();
+});
+</script>
+
+{% endblock %}

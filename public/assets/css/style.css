@@ -1,0 +1,402 @@
+/* -----------------------------------------
+   FONTS
+------------------------------------------ */
+
+/* Beispiel Font-Import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+
+:root {
+  --white: rgb(7, 41, 19);
+  --black: rgb(255, 255, 255);
+  --menu-color: rgba(7, 39, 28, 0.7);
+  --fixed-menu-color: rgb(39 200 199);
+}
+
+
+/* Font-Fallback */
+body {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  background-image: url('../img/background2.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
+  color: #fff;
+}
+
+
+.tiptap [style*="font-size"] {
+  font-size: inherit;
+}
+
+.tiptap [style*="font-family"] {
+  font-family: inherit;
+}
+
+/* -----------------------------------------
+   RESET & BASIC
+------------------------------------------ */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+/*
+.row {
+  --bs-gutter-x: 30px;
+  --bs-gutter-y: 30px;
+}
+*/
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+header .btn {
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 1);
+  border-radius: 15px;
+  padding: 5px 15px;
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+}
+
+
+
+
+input, button, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+
+/* -----------------------------------------
+   HEADINGS
+------------------------------------------ */
+
+h1 {
+  font-size: 32px;
+  margin: 0 0 20px 0;
+  font-weight: 600;
+}
+h2 {
+  font-size: 28px;
+  margin: 0 0 18px 0;
+  font-weight: 600;
+}
+h3 {
+  font-size: 24px;
+  margin: 0 0 16px 0;
+  font-weight: 600;
+}
+h4 {
+  font-size: 20px;
+  margin: 0 0 14px 0;
+  font-weight: 600;
+}
+h5 {
+  font-size: 18px;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+h6 {
+  font-size: 16px;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+}
+
+
+/* -----------------------------------------
+   HEADER
+------------------------------------------ */
+header {
+  position: relative;
+  z-index: 1000;
+  color: #fff;
+}
+.top-nav .menu-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 350px;
+  padding:60px 30px;
+  transform: translateX(-170px);
+  transition: transform 0.7s;
+  background: var(--menu-color);
+  display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.top-nav .menu-wrapper.is-opened {
+  transform: translateX(170px);
+}
+
+.top-nav .menu-wrapper .menu {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.top-nav .menu-wrapper.is-opened .menu {
+  opacity: 1;
+  transition-delay: 0.6s;
+}
+
+.top-nav .menu-wrapper .menu a {
+  font-size: 1.2rem;
+}
+
+.top-nav .menu-wrapper .sub-menu {
+  padding: 10px 0 0 7px;
+}
+
+.top-nav .menu-wrapper .menu-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 2rem;
+  color: #fff;
+}
+header ul {
+  list-style: none;
+}
+.top-nav .socials {
+  padding-left: 0;
+}
+
+
+
+/* FIXED MENU RULES
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.top-nav .fixed-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  width: 180px;
+  padding:30px 15px;
+  background: var(--fixed-menu-color);
+}
+
+.top-nav .fixed-menu .menu-toggle {
+  font-size: 2.3rem;
+  text-align: left;
+  margin: 30px 0 auto;
+  width: 28px;
+  color: #fff;
+  padding-left: 0;
+}
+
+.menu a {
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+  color: inherit; /* oder eine gewünschte Farbe */
+  transition: color 0.3s ease;
+}
+
+.menu a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -3px; /* Abstand unter dem Text */
+  width: 0%;
+  height: 2px;
+  background-color: currentColor;
+  transition: width 0.3s ease;
+}
+
+.menu a:hover::after,
+.menu a:focus::after {
+  width: 100%;
+}
+
+
+/* MQ STYLES
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+@media (max-width: 900px) {
+  body {
+    font-size: 16px;
+    overflow-x: hidden;
+  }
+
+  .top-banner {
+    top: 50px;
+    left: auto;
+    width: 100%;
+    height: calc(100vh - 50px);
+    transform: none;
+    align-items: center;
+  }
+
+  .top-banner-overlay {
+    position: relative; /*2*/
+    left: 0; /*2*/
+    max-width: 100%;
+  }
+
+  .top-banner-overlay.is-moved {
+    left: 100%; /*2*/
+    transform: none;
+  }
+
+  .top-nav .menu-wrapper {
+    width: 100%;
+    transform: translateX(-100%);
+    padding-top: 70px;
+  }
+
+  .top-nav .menu-wrapper.is-opened {
+    transform: none;
+  }
+
+  .top-nav .menu-wrapper .menu-close {
+    top: 70px;
+  }
+
+  .top-nav .fixed-menu {
+    bottom: auto;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    height: 50px;
+    padding: 0 20px;
+  }
+
+  .top-nav .fixed-menu .menu-toggle {
+    margin: 0;
+    order: 3;
+  }
+
+  .top-nav .socials {
+    display: flex;
+    margin-left: auto;
+    padding-left: 0;
+  }
+
+  .top-nav .socials li {
+    margin-right: 15px;
+  }
+
+  .top-nav .socials li + li {
+    margin-top: 0;
+  }
+    .top-nav .socials li {
+    margin-right: 15px;
+  }
+}
+
+
+/* -----------------------------------------
+   MAIN & LAYOUT
+------------------------------------------ */
+/* TOP BANNER RULES
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.top-banner {
+  position: relative;
+  left: 200px;
+  display: flex;
+  width: calc(100% - 200px);
+  height: 100vh;
+
+}
+
+.top-banner-overlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 350px;
+  padding: 20px;
+  transition: all 0.7s;
+  color: var(--white);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.top-banner-overlay.is-moved {
+  transform: translateX(350px);
+}
+
+.top-banner-overlay.is-moved::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 100%;
+  width: 20px;
+  box-shadow: 3px 0 10px rgba(0, 0, 0, .75);
+}
+
+.top-banner-overlay p {
+  margin-top: 10px;
+}
+
+.top-nav li + li {
+  margin-top: 7px;
+}
+
+.folder-card,
+		.note-card {
+			cursor: pointer;
+			transition: all 0.2s ease;
+		}
+
+		.folder-card:hover,
+		.note-card:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+		}
+
+		.folder-card {
+			border: 2px dashed #ffc107;
+		}
+
+		.note-card {
+			border: 1px solid #dee2e6;
+		}
+
+		.breadcrumb-item a {
+			text-decoration: none;
+		}
+
+		.breadcrumb-item a:hover {
+			text-decoration: underline;
+		}
+
+		/* Sidebar Notizen Styling */
+		#sidebar-notes-list ul {
+			max-height: 150px;
+			overflow-y: auto;
+		}
+
+		#sidebar-notes-list a:hover {
+			background-color: #f8f9fa;
+			padding: 2px 4px;
+			border-radius: 3px;
+		}

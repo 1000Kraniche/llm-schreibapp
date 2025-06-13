@@ -1,0 +1,128 @@
+{# templates/page/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Home{% endblock %}
+
+{% block body %}
+<main class="vh-100 vw-100 pt-3 pb-3">
+  <section class="container-fluid h-100">
+    <div class="row h-100 align-items-center justify-content-center">
+      <div class="col-lg-8 col-md-10">
+        
+        <!-- Welcome Header -->
+        <div class="text-center mb-5">
+          <h1 class="display-4 fw-bold mb-3">
+            <i class="fas fa-feather-alt me-3"></i>LLM Schreibapp
+          </h1>
+          <p class="lead">
+            Ein moderner, browserbasierter Editor für kreatives Arbeiten mit KI-Unterstützung.
+          </p>
+        </div>
+
+        <!-- User Status -->
+        <div class="row justify-content-center mb-4">
+          <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body text-center p-4">
+                {% if app.user %}
+                  <i class="fas fa-user-circle fa-3x text-success mb-3"></i>
+                  <h5 class="card-title">Willkommen zurück!</h5>
+                  <p class="card-text">
+                    Eingeloggt als <strong>{{ app.user.userName }}</strong>
+                  </p>
+                  <div class="d-grid gap-2">
+                    <a href="{{ path('project_list') }}" class="btn btn-primary">
+                      <i class="fas fa-folder me-2"></i>Zu meinen Projekten
+                    </a>
+                    <a href="{{ path('workspace_demo') }}" class="btn btn-outline-secondary">
+                      <i class="fas fa-edit me-2"></i>Demo Workspace
+                    </a>
+                  </div>
+                {% else %}
+                  <i class="fas fa-pen-fancy fa-3x text-primary mb-3"></i>
+                  <h5 class="card-title">Bereit zum Schreiben?</h5>
+                  <p class="card-text">
+                    Melde dich an oder registriere dich um loszulegen.
+                  </p>
+                  <div class="d-grid gap-2">
+                    <a href="{{ path('app_login') }}" class="btn btn-primary">
+                      <i class="fas fa-sign-in-alt me-2"></i>Anmelden
+                    </a>
+                    <a href="{{ path('app_register') }}" class="btn btn-outline-primary">
+                      <i class="fas fa-user-plus me-2"></i>Registrieren
+                    </a>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="row g-4 mb-4">
+          <div class="col-md-4">
+            <div class="text-center">
+              <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                <i class="fas fa-robot fa-2x text-primary"></i>
+              </div>
+              <h3 class="fw-bold">KI-Unterstützung</h3>
+              <p class="">
+                Intelligente Schreibhilfe durch lokales LLM
+              </p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-center">
+              <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                <i class="fas fa-save fa-2x text-success"></i>
+              </div>
+              <h3 class="fw-bold">Auto-Save</h3>
+              <p class="">
+                Automatisches Speichern - nie wieder Arbeit verlieren
+              </p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-center">
+              <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                <i class="fas fa-sticky-note fa-2x text-info"></i>
+              </div>
+              <h3 class="fw-bold">Notizen-System</h3>
+              <p class="">
+                Organisiere deine Ideen und Recherche
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats (nur wenn eingeloggt) -->
+        {% if app.user %}
+        <div class="row justify-content-center">
+          <div class="col-md-8">
+            <div class="card border-0 bg-light">
+              <div class="card-body">
+                <div class="row text-center">
+                  <div class="col-4">
+                    <div class="fw-bold h4 text-primary">3</div>
+                    <small class="text-muted">Projekte</small>
+                  </div>
+                  <div class="col-4">
+                    <div class="fw-bold h4 text-success">1,247</div>
+                    <small class="text-muted">Wörter</small>
+                  </div>
+                  <div class="col-4">
+                    <div class="fw-bold h4 text-info">12</div>
+                    <small class="text-muted">Notizen</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

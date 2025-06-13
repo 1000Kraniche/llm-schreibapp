@@ -1,0 +1,331 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mein Profil{% endblock %}
+
+{% block body %}
+<main class="vh-100 vw-100 pt-3 pb-3">
+  <section class="container-fluid h-100">
+    <div class="row h-100">
+      <div class="col-lg-8 mx-auto">
+        
+        <!-- Header -->
+        <div class="text-center mb-4">
+          <h1 class="display-6 fw-bold text-primary">
+            <i class="fas fa-user-circle me-3"></i>Mein Profil
+          </h1>
+          <p class="lead text-muted">Deine Account-Übersicht und Statistiken</p>
+        </div>
+
+        {% if app.user %}
+        
+        <!-- User Info Card -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-id-card me-2"></i>Account-Informationen
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3 text-center">
+                <!-- Profile Avatar -->
+                <div class="mb-3">
+                  <i class="fas fa-user-circle fa-5x text-primary"></i>
+                </div>
+                <h5 class="fw-bold">{{ app.user.userName }}</h5>
+                <p class="text-muted small">LLM Schreibapp Nutzer</p>
+              </div>
+              <div class="col-md-9">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label fw-bold">
+                      <i class="fas fa-user me-2"></i>Benutzername:
+                    </label>
+                    <p class="form-control-plaintext">{{ app.user.userName }}</p>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-bold">
+                      <i class="fas fa-envelope me-2"></i>E-Mail:
+                    </label>
+                    <p class="form-control-plaintext">{{ app.user.email }}</p>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-bold">
+                      <i class="fas fa-calendar-alt me-2"></i>Mitglied seit:
+                    </label>
+                    <p class="form-control-plaintext">
+                      {{ app.user.createdAt ? app.user.createdAt|date('d.m.Y') : 'Unbekannt' }}
+                    </p>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-bold">
+                      <i class="fas fa-clock me-2"></i>Letzte Aktivität:
+                    </label>
+                    <p class="form-control-plaintext">
+                      {{ app.user.updatedAt ? app.user.updatedAt|date('d.m.Y H:i') : 'Heute' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row g-4 mb-4">
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body text-center">
+                <i class="fas fa-folder fa-2x text-primary mb-2"></i>
+                <h3 class="fw-bold text-primary">3</h3>
+                <p class="text-muted mb-0">Projekte</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body text-center">
+                <i class="fas fa-file-alt fa-2x text-success mb-2"></i>
+                <h3 class="fw-bold text-success">15,247</h3>
+                <p class="text-muted mb-0">Wörter geschrieben</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body text-center">
+                <i class="fas fa-sticky-note fa-2x text-info mb-2"></i>
+                <h3 class="fw-bold text-info">28</h3>
+                <p class="text-muted mb-0">Notizen erstellt</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body text-center">
+                <i class="fas fa-robot fa-2x text-warning mb-2"></i>
+                <h3 class="fw-bold text-warning">142</h3>
+                <p class="text-muted mb-0">KI-Anfragen</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Projects -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="fas fa-clock me-2"></i>Letzte Projekte
+            </h5>
+            <a href="{{ path('project_list') }}" class="btn btn-sm btn-outline-primary">
+              <i class="fas fa-eye me-1"></i>Alle anzeigen
+            </a>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <div class="card border-0 bg-light">
+                  <div class="card-body p-3">
+                    <h6 class="card-title">
+                      <i class="fas fa-book me-2 text-primary"></i>Helon Husk Roman
+                    </h6>
+                    <p class="card-text small text-muted">Zuletzt bearbeitet: Heute, 14:30</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <small class="text-success">
+                        <i class="fas fa-chart-line me-1"></i>8,947 Wörter
+                      </small>
+                      <a href="{{ path('workspace', {slug: 'helon-husk-roman'}) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit me-1"></i>Öffnen
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card border-0 bg-light">
+                  <div class="card-body p-3">
+                    <h6 class="card-title">
+                      <i class="fas fa-chart-bar me-2 text-success"></i>Marktdaten 2025
+                    </h6>
+                    <p class="card-text small text-muted">Zuletzt bearbeitet: Gestern, 16:45</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <small class="text-success">
+                        <i class="fas fa-chart-line me-1"></i>3,201 Wörter
+                      </small>
+                      <a href="{{ path('workspace', {slug: 'marktdaten-2025'}) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit me-1"></i>Öffnen
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card border-0 bg-light">
+                  <div class="card-body p-3">
+                    <h6 class="card-title">
+                      <i class="fas fa-brain me-2 text-info"></i>Bericht KI-Ethik
+                    </h6>
+                    <p class="card-text small text-muted">Zuletzt bearbeitet: 02.06.2025</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <small class="text-success">
+                        <i class="fas fa-chart-line me-1"></i>3,099 Wörter
+                      </small>
+                      <a href="{{ path('workspace', {slug: 'bericht-ki-ethik'}) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit me-1"></i>Öffnen
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-history me-2"></i>Letzte Aktivitäten
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="timeline">
+              <div class="timeline-item d-flex mb-3">
+                <div class="timeline-marker bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                  <i class="fas fa-edit text-white"></i>
+                </div>
+                <div class="timeline-content">
+                  <h6 class="mb-1">Projekt "Helon Husk Roman" bearbeitet</h6>
+                  <p class="text-muted small mb-1">347 neue Wörter hinzugefügt</p>
+                  <small class="text-muted">Heute, 14:30</small>
+                </div>
+              </div>
+              <div class="timeline-item d-flex mb-3">
+                <div class="timeline-marker bg-success rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                  <i class="fas fa-sticky-note text-white"></i>
+                </div>
+                <div class="timeline-content">
+                  <h6 class="mb-1">Neue Notiz "Charakterentwicklung" erstellt</h6>
+                  <p class="text-muted small mb-1">Im Projekt "Helon Husk Roman"</p>
+                  <small class="text-muted">Heute, 12:15</small>
+                </div>
+              </div>
+              <div class="timeline-item d-flex mb-3">
+                <div class="timeline-marker bg-warning rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                  <i class="fas fa-robot text-white"></i>
+                </div>
+                <div class="timeline-content">
+                  <h6 class="mb-1">KI-Assistent um Hilfe gebeten</h6>
+                  <p class="text-muted small mb-1">"Wie kann ich den Dialog spannender machen?"</p>
+                  <small class="text-muted">Gestern, 16:22</small>
+                </div>
+              </div>
+              <div class="timeline-item d-flex mb-3">
+                <div class="timeline-marker bg-info rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                  <i class="fas fa-plus text-white"></i>
+                </div>
+                <div class="timeline-content">
+                  <h6 class="mb-1">Neues Projekt "Marktdaten 2025" erstellt</h6>
+                  <p class="text-muted small mb-1">Wissenschaftliche Analyse</p>
+                  <small class="text-muted">01.06.2025, 09:30</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-bolt me-2"></i>Schnellaktionen
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <a href="{{ path('project_list') }}" class="btn btn-outline-primary w-100">
+                  <i class="fas fa-plus me-2"></i>Neues Projekt
+                </a>
+              </div>
+              <div class="col-md-3">
+                <a href="{{ path('workspace', {slug: 'helon-husk-roman'}) }}" class="btn btn-outline-success w-100">
+                  <i class="fas fa-edit me-2"></i>Weiter schreiben
+                </a>
+              </div>
+              <div class="col-md-3">
+                <a href="{{ path('settings') }}" class="btn btn-outline-info w-100">
+                  <i class="fas fa-cog me-2"></i>Einstellungen
+                </a>
+              </div>
+              <div class="col-md-3">
+                <a href="{{ path('help') }}" class="btn btn-outline-secondary w-100">
+                  <i class="fas fa-question-circle me-2"></i>Hilfe
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% else %}
+        
+        <!-- Not Logged In -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center p-5">
+            <i class="fas fa-user-slash fa-4x text-muted mb-4"></i>
+            <h3 class="mb-3">Du bist nicht angemeldet</h3>
+            <p class="text-muted mb-4">
+              Melde dich an um dein Profil und deine Statistiken zu sehen.
+            </p>
+            <div class="d-flex gap-2 justify-content-center">
+              <a href="{{ path('app_login') }}" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt me-2"></i>Anmelden
+              </a>
+              <a href="{{ path('app_register') }}" class="btn btn-outline-primary">
+                <i class="fas fa-user-plus me-2"></i>Registrieren
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        {% endif %}
+
+        <!-- Back Navigation -->
+        <div class="text-center mt-4">
+          <a href="{{ path('home') }}" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-home me-2"></i>Zur Startseite
+          </a>
+          {% if app.user %}
+          <a href="{{ path('project_list') }}" class="btn btn-primary">
+            <i class="fas fa-folder me-2"></i>Meine Projekte
+          </a>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<style>
+.timeline-item {
+  position: relative;
+}
+
+.timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 40px;
+  bottom: -20px;
+  width: 2px;
+  background-color: #dee2e6;
+}
+
+.timeline-marker {
+  flex-shrink: 0;
+  min-width: 40px;
+  min-height: 40px;
+}
+</style>
+{% endblock %}

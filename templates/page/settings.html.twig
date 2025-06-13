@@ -1,0 +1,327 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Einstellungen{% endblock %}
+
+{% block body %}
+<main class="vh-100 vw-100 pt-3 pb-3">
+  <section class="container-fluid h-100">
+    <div class="row h-100">
+      <div class="col-lg-8 mx-auto">
+        
+        <!-- Header -->
+        <div class="text-center mb-4">
+          <h1 class="display-6 fw-bold text-primary">
+            <i class="fas fa-cog me-3"></i>Einstellungen
+          </h1>
+          <p class="lead text-muted">Passe die App an deine Bedürfnisse an</p>
+        </div>
+
+        <!-- Account Settings -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-user me-2"></i>Account-Einstellungen
+            </h5>
+          </div>
+          <div class="card-body">
+            {% if app.user %}
+            <form id="account-form" class="row g-3">
+              <div class="col-md-6">
+                <label for="username" class="form-label">
+                  <i class="fas fa-user me-2"></i>Benutzername
+                </label>
+                <input type="text" class="form-control" id="username" value="{{ app.user.userName }}" readonly>
+                <div class="form-text">Der Benutzername kann derzeit nicht geändert werden.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="email" class="form-label">
+                  <i class="fas fa-envelope me-2"></i>E-Mail
+                </label>
+                <input type="email" class="form-control" id="email" value="{{ app.user.email }}" readonly>
+                <div class="form-text">Die E-Mail kann derzeit nicht geändert werden.</div>
+              </div>
+              <div class="col-12">
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  <strong>Info:</strong> Account-Daten können derzeit nur über die Datenbank geändert werden.
+                </div>
+              </div>
+            </form>
+            {% else %}
+            <div class="text-center">
+              <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+              <p class="text-muted">Du musst angemeldet sein um Account-Einstellungen zu sehen.</p>
+              <a href="{{ path('app_login') }}" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt me-2"></i>Jetzt anmelden
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- App Preferences -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-sliders-h me-2"></i>App-Einstellungen
+            </h5>
+          </div>
+          <div class="card-body">
+            <form id="app-preferences-form" class="row g-3">
+              
+              <!-- Default Project -->
+              {% if app.user %}
+              <div class="col-md-6">
+                <label for="default-project" class="form-label">
+                  <i class="fas fa-folder me-2"></i>Standard-Projekt
+                </label>
+                <select class="form-select" id="default-project">
+                  <option value="">Kein Standard-Projekt</option>
+                  <option value="1">Helon Husk Roman</option>
+                  <option value="2">Marktdaten 2025</option>
+                  <option value="3">Bericht KI-Ethik</option>
+                </select>
+                <div class="form-text">Wird beim Start automatisch geöffnet.</div>
+              </div>
+              {% endif %}
+              
+              <!-- Interface Language -->
+              <div class="col-md-6">
+                <label for="language" class="form-label">
+                  <i class="fas fa-globe me-2"></i>Sprache
+                </label>
+                <select class="form-select" id="language">
+                  <option value="de" selected>Deutsch</option>
+                  <option value="en">English</option>
+                </select>
+                <div class="form-text">Interface-Sprache der Anwendung.</div>
+              </div>
+              
+              <!-- Auto-Save Default -->
+              <div class="col-md-6">
+                <label for="autosave-default" class="form-label">
+                  <i class="fas fa-save me-2"></i>Auto-Save Standard
+                </label>
+                <select class="form-select" id="autosave-default">
+                  <option value="true" selected>Aktiviert</option>
+                  <option value="false">Deaktiviert</option>
+                </select>
+                <div class="form-text">Standard-Einstellung für neue Projekte.</div>
+              </div>
+              
+              <!-- Editor Theme -->
+              <div class="col-md-6">
+                <label for="editor-theme" class="form-label">
+                  <i class="fas fa-palette me-2"></i>Editor-Theme
+                </label>
+                <select class="form-select" id="editor-theme">
+                  <option value="default" selected>Standard</option>
+                  <option value="dark">Dunkel</option>
+                  <option value="minimal">Minimal</option>
+                </select>
+                <div class="form-text">Aussehen des Text-Editors.</div>
+              </div>
+              
+              <!-- Save Button -->
+              <div class="col-12">
+                <button type="button" class="btn btn-success" onclick="saveAppPreferences()">
+                  <i class="fas fa-save me-2"></i>Einstellungen speichern
+                </button>
+                <button type="button" class="btn btn-outline-secondary ms-2" onclick="resetAppPreferences()">
+                  <i class="fas fa-undo me-2"></i>Zurücksetzen
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- LLM Configuration -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-robot me-2"></i>LLM-Konfiguration
+            </h5>
+          </div>
+          <div class="card-body">
+            
+            <!-- Current Status -->
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <h6 class="fw-bold">Aktueller Status:</h6>
+                <div id="llm-current-status" class="d-flex align-items-center">
+                  <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                  <span class="text-muted">Status wird geprüft...</span>
+                </div>
+              </div>
+              <div class="col-md-4 text-end">
+                <button class="btn btn-outline-info btn-sm" onclick="refreshLLMStatus()">
+                  <i class="fas fa-sync-alt me-2"></i>Aktualisieren
+                </button>
+              </div>
+            </div>
+            
+            <!-- LLM Settings -->
+            <form id="llm-config-form" class="row g-3">
+              <div class="col-md-6">
+                <label for="llm-server" class="form-label">
+                  <i class="fas fa-server me-2"></i>LLM-Server
+                </label>
+                <input type="text" class="form-control" id="llm-server" value="localhost:11434" readonly>
+                <div class="form-text">Server-Adresse kann nicht geändert werden.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="llm-model" class="form-label">
+                  <i class="fas fa-brain me-2"></i>Modell
+                </label>
+                <input type="text" class="form-control" id="llm-model" value="openhermes" readonly>
+                <div class="form-text">Aktuell verwendetes LLM-Modell.</div>
+              </div>
+              <div class="col-12">
+                <div class="alert alert-warning">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  <strong>Hinweis:</strong> LLM-Einstellungen sind fest konfiguriert und können nicht über die Oberfläche geändert werden.
+                  Änderungen müssen direkt in der Docker-Konfiguration vorgenommen werden.
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card border-danger shadow-sm">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-exclamation-triangle me-2"></i>Gefahrenzone
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-8">
+                <h6 class="text-danger fw-bold">Account löschen</h6>
+                <p class="text-muted mb-0">
+                  Lösche deinen Account und alle deine Projekte permanent. 
+                  <strong>Diese Aktion kann nicht rückgängig gemacht werden!</strong>
+                </p>
+              </div>
+              <div class="col-md-4 text-end">
+                <button class="btn btn-outline-danger" onclick="confirmDeleteAccount()" {% if not app.user %}disabled{% endif %}>
+                  <i class="fas fa-trash me-2"></i>Account löschen
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Back Navigation -->
+        <div class="text-center mt-4">
+          <a href="{{ path('home') }}" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-home me-2"></i>Zur Startseite
+          </a>
+          <a href="{{ path('project_list') }}" class="btn btn-primary">
+            <i class="fas fa-folder me-2"></i>Meine Projekte
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- JavaScript für Settings -->
+<script>
+// App Preferences speichern
+function saveAppPreferences() {
+    const defaultProject = document.getElementById('default-project').value;
+    const language = document.getElementById('language').value;
+    const autosaveDefault = document.getElementById('autosave-default').value;
+    const editorTheme = document.getElementById('editor-theme').value;
+    
+    // Simulate saving (in real app: API call)
+    const preferences = {
+        defaultProject,
+        language,
+        autosaveDefault: autosaveDefault === 'true',
+        editorTheme
+    };
+    
+    console.log('Saving preferences:', preferences);
+    
+    // Show success message
+    showMessage('Einstellungen erfolgreich gespeichert!', 'success');
+}
+
+// App Preferences zurücksetzen
+function resetAppPreferences() {
+    document.getElementById('default-project').value = '';
+    document.getElementById('language').value = 'de';
+    document.getElementById('autosave-default').value = 'true';
+    document.getElementById('editor-theme').value = 'default';
+    
+    showMessage('Einstellungen zurückgesetzt!', 'info');
+}
+
+// LLM Status aktualisieren
+async function refreshLLMStatus() {
+    const statusDiv = document.getElementById('llm-current-status');
+    
+    statusDiv.innerHTML = `
+        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+        <span class="text-muted">Status wird geprüft...</span>
+    `;
+    
+    try {
+        const response = await fetch('/api/llm/status');
+        const data = await response.json();
+        
+        if (data.status === 'online') {
+            statusDiv.innerHTML = `
+                <i class="fas fa-check-circle text-success me-2"></i>
+                <span class="text-success fw-bold">Online</span>
+                <small class="text-muted ms-2">(${data.models?.models?.length || 0} Modelle)</small>
+            `;
+        } else {
+            throw new Error('Offline');
+        }
+    } catch (error) {
+        statusDiv.innerHTML = `
+            <i class="fas fa-times-circle text-danger me-2"></i>
+            <span class="text-danger fw-bold">Offline</span>
+            <small class="text-muted ms-2">(Verbindung fehlgeschlagen)</small>
+        `;
+    }
+}
+
+// Account löschen bestätigen
+function confirmDeleteAccount() {
+    if (confirm('Wirklich den Account und alle Projekte löschen?\n\nDiese Aktion kann NICHT rückgängig gemacht werden!')) {
+        if (confirm('Letzte Warnung!\n\nAlle deine Texte und Notizen gehen verloren!')) {
+            // In real app: API call to delete account
+            showMessage('Account-Löschung würde hier durchgeführt werden.', 'warning');
+        }
+    }
+}
+
+// Message anzeigen
+function showMessage(message, type) {
+    const alertClass = `alert-${type}`;
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+    
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) alert.remove();
+    }, 3000);
+}
+
+// Initial LLM Status laden
+document.addEventListener('DOMContentLoaded', function() {
+    refreshLLMStatus();
+});
+</script>
+{% endblock %}
