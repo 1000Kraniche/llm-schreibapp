@@ -690,10 +690,9 @@ $(document).ready(function() {
     console.log('📋 Notes-Manager initialisiert');
     
     // Project ID extrahieren
-    const workspaceElement = document.querySelector('[data-project-id]');
+    const workspaceElement = document.querySelector('[data-project-slug]');
     if (workspaceElement) {
-        notesProjectId = workspaceElement.dataset.projectId;
-        console.log('📊 Project ID für Notizen:', notesProjectId);
+    notesProjectSlug = workspaceElement.dataset.projectSlug;
         
         // Sidebar-Notizen sofort laden
         setTimeout(() => {

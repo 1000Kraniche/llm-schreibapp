@@ -33,10 +33,10 @@ function initializeSummernoteEditor() {
     console.log('✅ jQuery und Summernote verfügbar');
     
     // Projekt-Daten aus HTML extrahieren
-    const mainElement = document.querySelector('[data-project-id]');
+    const mainElement = document.querySelector('[data-project-slug]');
     if (mainElement) {
-        projectId = mainElement.dataset.projectId;
-        console.log('📊 Project ID gefunden:', projectId);
+    projectSlug = mainElement.dataset.projectSlug;
+ 
     }
 
     const editorElement = $('#summernote-editor');
