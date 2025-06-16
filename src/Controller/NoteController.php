@@ -15,13 +15,15 @@ use Symfony\Component\Routing\Annotation\Route;
 class NoteController extends AbstractController
 {
     /**
-     * Notizen für ein Projekt laden (mit Slug!)
+     * Notizen laden by PROJECT SLUG (CLEAN VERSION)
      */
-    #[Route('/api/notes/project-slug/{slug}', name: 'api_notes_by_project_slug', methods: ['GET'])]
-    public function getNotesByProjectSlug(string $slug, ProjectRepository $projectRepository, NoteRepository $noteRepository): JsonResponse
+    #[Route('/api/notes/project/{slug}', name: 'api_notes_list_by_slug', methods: ['GET'])]
+    public function listNotesByProjectSlug(string $slug, NoteRepository $noteRepository, ProjectRepository $projectRepository): JsonResponse
     {
+        // Login erforderlich
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
+        // Projekt über Slug und Owner finden
         $project = $projectRepository->findOneBy([
             'slug' => $slug,
             'owner' => $this->getUser()
@@ -31,60 +33,77 @@ class NoteController extends AbstractController
             return new JsonResponse(['error' => 'Projekt nicht gefunden oder kein Zugriff'], 404);
         }
 
-        $notes = $noteRepository->findBy(['project' => $project]);
-
-        $notesData = array_map(function (Note $note) {
-            return [
-                'id' => $note->getId(),
-                'title' => $note->getTitle(),
-                'content' => $note->getContent(),
-                'type' => 'note',
-                'parentId' => $note->getParentNote() ? $note->getParentNote()->getId() : null
-                // ✅ ENTFERNT: createdAt und updatedAt (existieren nicht)
-            ];
-        }, $notes);
-
-        return new JsonResponse($notesData);
+        $notes = $noteRepository->findBy(['project' => $project], ['id' => 'DESC']);
+        
+        return $this->formatNotesResponse($notes);
     }
 
-    #[Route('/api/notes/project/{projectId}', name: 'api_notes_list', methods: ['GET'])]
-    public function listNotes(int $projectId, NoteRepository $noteRepository, ProjectRepository $projectRepository): JsonResponse
+    /**
+     * Notizen laden by PROJECT ID (Legacy Support)
+     */
+    #[Route('/api/notes/project/{projectId}', name: 'api_notes_list_by_id', methods: ['GET'], requirements: ['projectId' => '\d+'])]
+    public function listNotesByProjectId(int $projectId, NoteRepository $noteRepository, ProjectRepository $projectRepository): JsonResponse
     {
+        // Login erforderlich
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        $project = $projectRepository->findOneBy(['id' => $projectId, 'owner' => $this->getUser()]);
+        $project = $projectRepository->findOneBy([
+            'id' => $projectId,
+            'owner' => $this->getUser()
+        ]);
+
         if (!$project) {
             return new JsonResponse(['error' => 'Projekt nicht gefunden oder kein Zugriff'], 404);
         }
 
-        $notes = $noteRepository->findBy(['project' => $projectId]);
+        $notes = $noteRepository->findBy(['project' => $project], ['id' => 'DESC']);
         
-        $notesData = array_map(function($note) {
-            return [
-                'id' => $note->getId(),
-                'title' => $note->getTitle(),
-                'content' => $note->getContent(),
-                'type' => 'note',
-                'parentId' => $note->getParentNote() ? $note->getParentNote()->getId() : null
-            ];
-        }, $notes);
+        return $this->formatNotesResponse($notes);
+    }
+
+    /**
+     * Einzelne Notiz abrufen
+     */
+    #[Route('/api/notes/{id}', name: 'api_notes_get', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function getNote(int $id, NoteRepository $noteRepository): JsonResponse
+    {
+        $note = $noteRepository->find($id);
         
-        return new JsonResponse($notesData);
+        if (!$note) {
+            return new JsonResponse(['error' => 'Notiz nicht gefunden'], 404);
+        }
+        
+        return new JsonResponse([
+            'id' => $note->getId(),
+            'title' => $note->getTitle(),
+            'content' => $note->getContent(),
+            'type' => 'note',
+            'updated_at' => method_exists($note, 'getUpdatedAt') && $note->getUpdatedAt() ? $note->getUpdatedAt()->format('Y-m-d H:i:s') : null,
+            'parentId' => $note->getParentNote() ? $note->getParentNote()->getId() : null
+        ]);
     }
     
+    /**
+     * Neue Notiz erstellen
+     */
     #[Route('/api/notes', name: 'api_notes_create', methods: ['POST'])]
-    public function createNote(Request $request, EntityManagerInterface $em, ProjectRepository $projectRepository): JsonResponse 
+    public function createNote(
+        Request $request, 
+        EntityManagerInterface $em,
+        ProjectRepository $projectRepository
+    ): JsonResponse 
     {
+        // Login erforderlich
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         $data = json_decode($request->getContent(), true);
         
-        if (!isset($data['title']) || trim($data['title']) === '') {
+        if (!isset($data['title'])) {
             return new JsonResponse(['error' => 'Titel ist erforderlich'], 400);
         }
 
+        // Projekt finden (Slug bevorzugt, ID als Fallback)
         $project = null;
-        
         if (isset($data['project_slug'])) {
             $project = $projectRepository->findOneBy([
                 'slug' => $data['project_slug'],
@@ -95,20 +114,31 @@ class NoteController extends AbstractController
                 'id' => $data['project_id'],
                 'owner' => $this->getUser()
             ]);
+        } else {
+            return new JsonResponse(['error' => 'Projekt-Slug oder -ID ist erforderlich'], 400);
         }
-
+        
         if (!$project) {
             return new JsonResponse(['error' => 'Projekt nicht gefunden oder kein Zugriff'], 404);
         }
         
         $note = new Note();
-        $note->setTitle(trim($data['title']));
+        $note->setTitle($data['title']);
         $note->setProject($project);
-        $note->setContent($data['content'] ?? '');
+        $note->setContent($data['content'] ?? ''); // Content optional
         
+        // NUR setzen falls die Entity diese Felder hat
+        if (method_exists($note, 'setCreatedAt')) {
+            $note->setCreatedAt(new \DateTimeImmutable());
+        }
+        if (method_exists($note, 'setUpdatedAt')) {
+            $note->setUpdatedAt(new \DateTimeImmutable());
+        }
+        
+        // Parent Note falls vorhanden
         if (isset($data['parent_id']) && $data['parent_id']) {
             $parentNote = $em->getRepository(Note::class)->find($data['parent_id']);
-            if ($parentNote && $parentNote->getProject() === $project) {
+            if ($parentNote) {
                 $note->setParentNote($parentNote);
             }
         }
@@ -121,69 +151,42 @@ class NoteController extends AbstractController
             'title' => $note->getTitle(),
             'content' => $note->getContent(),
             'type' => 'note',
-            'parentId' => $note->getParentNote() ? $note->getParentNote()->getId() : null,
-            'project' => [
-                'id' => $project->getId(),
-                'slug' => $project->getSlug(),
-                'title' => $project->getTitle()
-            ]
-        ], 201);
-    }
-    
-    #[Route('/api/notes/{id}', name: 'api_notes_get', methods: ['GET'])]
-    public function getNote(int $id, NoteRepository $noteRepository): JsonResponse
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-
-        $note = $noteRepository->find($id);
-        
-        if (!$note) {
-            return new JsonResponse(['error' => 'Notiz nicht gefunden'], 404);
-        }
-
-        if ($note->getProject()->getOwner() !== $this->getUser()) {
-            return new JsonResponse(['error' => 'Kein Zugriff auf diese Notiz'], 403);
-        }
-        
-        return new JsonResponse([
-            'id' => $note->getId(),
-            'title' => $note->getTitle(),
-            'content' => $note->getContent(),
-            'type' => 'note',
+            'updated_at' => method_exists($note, 'getUpdatedAt') && $note->getUpdatedAt() ? $note->getUpdatedAt()->format('Y-m-d H:i:s') : null,
             'parentId' => $note->getParentNote() ? $note->getParentNote()->getId() : null
         ]);
     }
     
-    #[Route('/api/notes/{id}', name: 'api_notes_update', methods: ['PUT'])]
-    public function updateNote(int $id, Request $request, NoteRepository $noteRepository, EntityManagerInterface $em): JsonResponse 
+    /**
+     * Notiz aktualisieren
+     */
+    #[Route('/api/notes/{id}', name: 'api_notes_update', methods: ['PUT'], requirements: ['id' => '\d+'])]
+    public function updateNote(
+        int $id, 
+        Request $request, 
+        NoteRepository $noteRepository,
+        EntityManagerInterface $em
+    ): JsonResponse 
     {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-
         $note = $noteRepository->find($id);
         
         if (!$note) {
             return new JsonResponse(['error' => 'Notiz nicht gefunden'], 404);
         }
-
-        if ($note->getProject()->getOwner() !== $this->getUser()) {
-            return new JsonResponse(['error' => 'Kein Zugriff auf diese Notiz'], 403);
-        }
         
         $data = json_decode($request->getContent(), true);
         
-        if (isset($data['title']) && trim($data['title']) === '') {
-            return new JsonResponse(['error' => 'Titel darf nicht leer sein'], 400);
-        }
-        
         if (isset($data['title'])) {
-            $note->setTitle(trim($data['title']));
+            $note->setTitle($data['title']);
         }
         
         if (isset($data['content'])) {
             $note->setContent($data['content']);
         }
 
-        // ✅ ENTFERNT: setUpdatedAt (existiert nicht in Note Entity)
+        // NUR setzen falls die Entity dieses Feld hat
+        if (method_exists($note, 'setUpdatedAt')) {
+            $note->setUpdatedAt(new \DateTimeImmutable());
+        }
         
         $em->flush();
         
@@ -192,48 +195,49 @@ class NoteController extends AbstractController
             'title' => $note->getTitle(),
             'content' => $note->getContent(),
             'type' => 'note',
+            'updated_at' => method_exists($note, 'getUpdatedAt') && $note->getUpdatedAt() ? $note->getUpdatedAt()->format('Y-m-d H:i:s') : null,
             'parentId' => $note->getParentNote() ? $note->getParentNote()->getId() : null
         ]);
     }
-    
-    #[Route('/api/notes/{id}', name: 'api_notes_delete', methods: ['DELETE'])]
-    public function deleteNote(int $id, NoteRepository $noteRepository, EntityManagerInterface $em): JsonResponse 
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
+    /**
+     * Notiz löschen
+     */
+    #[Route('/api/notes/{id}', name: 'api_notes_delete', methods: ['DELETE'], requirements: ['id' => '\d+'])]
+    public function deleteNote(
+        int $id, 
+        NoteRepository $noteRepository,
+        EntityManagerInterface $em
+    ): JsonResponse 
+    {
         $note = $noteRepository->find($id);
         
         if (!$note) {
             return new JsonResponse(['error' => 'Notiz nicht gefunden'], 404);
         }
+        
+        $em->remove($note);
+        $em->flush();
+        
+        return new JsonResponse(['success' => true, 'message' => 'Notiz gelöscht']);
+    }
 
-        if ($note->getProject()->getOwner() !== $this->getUser()) {
-            return new JsonResponse(['error' => 'Kein Zugriff auf diese Notiz'], 403);
-        }
+    /**
+     * Helper: Notizen-Response formatieren
+     */
+    private function formatNotesResponse(array $notes): JsonResponse
+    {
+        $notesData = array_map(function($note) {
+            return [
+                'id' => $note->getId(),
+                'title' => $note->getTitle(),
+                'content' => $note->getContent(),
+                'type' => 'note',
+                'updated_at' => method_exists($note, 'getUpdatedAt') && $note->getUpdatedAt() ? $note->getUpdatedAt()->format('Y-m-d H:i:s') : null,
+                'parentId' => $note->getParentNote() ? $note->getParentNote()->getId() : null
+            ];
+        }, $notes);
         
-        if (method_exists($note, 'getChildNotes')) {
-            $childNotes = $note->getChildNotes();
-            if ($childNotes && $childNotes->count() > 0) {
-                return new JsonResponse([
-                    'error' => 'Diese Notiz kann nicht gelöscht werden, da sie Unter-Notizen enthält.'
-                ], 400);
-            }
-        }
-        
-        $noteTitle = $note->getTitle();
-        
-        try {
-            $em->remove($note);
-            $em->flush();
-            
-            return new JsonResponse([
-                'success' => true,
-                'message' => 'Notiz "' . $noteTitle . '" wurde erfolgreich gelöscht.'
-            ]);
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'error' => 'Fehler beim Löschen der Notiz: ' . $e->getMessage()
-            ], 500);
-        }
+        return new JsonResponse($notesData);
     }
 }
