@@ -411,8 +411,8 @@ function initializeLLMChat() {
         
         
        // Projekt-ID aus dem Data-Attribut holen
-const projectId = $('[data-project-id]').data('project-id');
-console.log('📊 Projekt-ID für LLM:', projectId);;
+const projectSlug = $('[data-project-slug]').data('project-slug');
+
         
         $('#llm-response').html(`
             <div class="d-flex align-items-center">
