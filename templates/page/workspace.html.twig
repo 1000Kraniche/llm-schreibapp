@@ -39,33 +39,29 @@
 						{# Editor-Toolbar #}
 						<div class="mb-3 d-flex justify-content-between">
 							<div class="btn-group" role="group">
-								<button type="button" class="btn btn-outline-success btn-sm" onclick="saveNow()">
+								<button type="button" class="btn btn-success btn-sm" onclick="saveNow()">
 									<i class="fas fa-save"></i>
 									Speichern
 								</button>
-								<button type="button" class="btn btn-outline-info btn-sm" onclick="showWordCount()">
-									<i class="fas fa-chart-bar"></i>
-									Statistik
-								</button>
-								<button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAutoSave()">
+								<button type="button" class="btn btn-outline-success btn-sm" onclick="toggleAutoSave()">
 									<i class="fas fa-robot"></i>
 									<span id="autosave-status">Auto-Save: Ein</span>
 								</button>
 							</div>
 
 							<div class="btn-group" role="group">
-								<button type="button" class="btn btn-outline-warning btn-sm" onclick="saveAsNote()">
+								<button type="button" class="btn btn-warning btn-sm" onclick="saveAsNote()">
 									<i class="fas fa-sticky-note"></i>
 									Als Notiz
 								</button>
-								<button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#notesModal">
+								<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#notesModal">
 									<i class="fas fa-list"></i>
 									Notizen-Übersicht
 								</button>
 							</div>
 
 							<div class="btn-group" role="group">
-								<a href="{{ path('project_list') }}" class="btn btn-outline-secondary btn-sm">
+								<a href="{{ path('project_list') }}" class="btn btn-secondary btn-sm">
 									<i class="fas fa-arrow-left"></i>
 									Zurück
 								</a>
@@ -222,12 +218,6 @@
 											<i class="fas fa-paper-plane"></i>
 										</button>
 									</div>
-									<div class="form-check mt-1">
-										<input class="form-check-input" type="checkbox" id="insert-to-editor" checked>
-										<label class="form-check-label small" for="insert-to-editor">
-											Antwort in Editor einfügen
-										</label>
-									</div>
 								</form>
 							</div>
 						</div>
@@ -292,7 +282,7 @@
 									</div>
 
 									{# Ordner und Notizen Liste #}
-									<div id="notes-content" class="border rounded p-3" style="height: 300px; overflow-y: auto;">
+									<div id="notes-content" class="border rounded p-3"">
 										<div
 											class="row g-3" id="items-grid">
 											{# Hier werden die Notizen-Cards von JavaScript eingefügt #}

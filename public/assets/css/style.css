@@ -18,12 +18,27 @@
 body {
   font-family: 'Inter', sans-serif;
   font-size: 16px;
-  background-image: url('../img/background2.jpg');
-  background-size: cover;
+ background-image: url('../img/background2.jpg');
+  background-size: 150%;
   background-repeat: no-repeat;
   background-position: center center;
   background-attachment: fixed;
   color: #fff;
+
+  animation: backgroundMove 120s linear infinite;
+}
+
+/* Animation für langsame Bewegung */
+@keyframes backgroundMove {
+  0% {
+    background-position: center left;
+  }
+  50% {
+    background-position: bottom center;
+  }
+  100% {
+    background-position: center left;
+  }
 }
 
 

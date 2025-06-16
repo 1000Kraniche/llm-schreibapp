@@ -62,7 +62,7 @@ function initializeLLMChat() {
     }
     
     // Quick-Prompt Buttons hinzufügen
-    addQuickPrompts();
+    
     
     console.log('✅ LLM Chat erfolgreich initialisiert');
 }
@@ -180,47 +180,7 @@ function formatLLMResponse(response) {
         .replace(/^(.*)$/, '<p>$1</p>'); // Gesamten Text in <p> wrappen
 }
 
-/**
- * Quick-Prompt Buttons hinzufügen
- */
-function addQuickPrompts() {
-    const quickPrompts = [
-        "Hilf mir beim Weiterschreiben",
-        "Fasse den bisherigen Text zusammen", 
-        "Welche Ideen hast du für dieses Projekt?",
-        "Verbessere meinen letzten Absatz",
-        "Erstelle eine Gliederung basierend auf meinen Notizen"
-    ];
-    
-    const llmForm = document.getElementById('llm-form');
-    if (!llmForm) return;
-    
-    let buttonsHtml = '<div class="quick-prompts mb-2">';
-    quickPrompts.forEach(prompt => {
-        buttonsHtml += `
-            <button type="button" class="btn btn-outline-primary btn-sm me-1 mb-1" 
-                    onclick="useQuickPrompt('${prompt.replace(/'/g, "\\'")}')">
-                ${prompt}
-            </button>
-        `;
-    });
-    buttonsHtml += '</div>';
-    
-    llmForm.insertAdjacentHTML('afterbegin', buttonsHtml);
-    console.log('✅ Quick-Prompt Buttons hinzugefügt');
-}
 
-/**
- * Quick-Prompt verwenden
- * @param {string} prompt - Vordefinierter Prompt
- */
-function useQuickPrompt(prompt) {
-    const llmInput = document.getElementById('llm-input');
-    if (llmInput) {
-        llmInput.value = prompt;
-        handleLLMSubmit();
-    }
-}
 
 // ====================================================
 // LLM STATUS FUNKTIONEN (SETTINGS & HELP)
@@ -390,7 +350,7 @@ function setLLMChatEnabled(enabled) {
 window.initializeLLMChat = initializeLLMChat;
 window.handleLLMSubmit = handleLLMSubmit;
 window.formatLLMResponse = formatLLMResponse;
-window.useQuickPrompt = useQuickPrompt;
+
 window.toggleLLMChat = toggleLLMChat;
 window.setLLMChatEnabled = setLLMChatEnabled;
 

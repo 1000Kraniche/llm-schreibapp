@@ -1,5 +1,5 @@
 <?php
-// src/Controller/ChatController.php - FINALER VERSUCH MIT PROJEKT-KONTEXT
+// src/Controller/ChatController.php - SLUG-BASIERTE VERSION
 
 namespace App\Controller;
 
@@ -15,23 +15,22 @@ class ChatController extends AbstractController
     #[Route('/api/llm/chat', name: 'llm_chat', methods: ['POST'])]
     public function chat(Request $request, HttpClientInterface $http, EntityManagerInterface $em): JsonResponse
     {
-
-        // HIER HINZUFÜGEN - ganz am Anfang der Funktion:
-    set_time_limit(180); // 3 Minuten PHP Timeout
-    
+        // 3 Minuten PHP Timeout
+        set_time_limit(180);
+        
         $data = json_decode($request->getContent(), true);
         $prompt = $data['prompt'] ?? null;
-        $projectId = $data['project_id'] ?? null;
+        $projectSlug = $data['project_slug'] ?? null;
 
         if (!$prompt) {
             return new JsonResponse(['error' => 'Kein Prompt gesendet.'], 400);
         }
 
         // DEBUG: Log was ankommt
-        error_log("ChatController DEBUG: prompt='$prompt', project_id='$projectId'");
+        error_log("ChatController DEBUG: prompt='$prompt', project_slug='$projectSlug'");
 
         // Projekt-Kontext aufbauen
-        $context = $this->buildProjectContext($projectId, $em);
+        $context = $this->buildProjectContext($projectSlug, $em);
         error_log("ChatController DEBUG: Context length=" . strlen($context));
         
         // Vollständigen Prompt mit Kontext erstellen
@@ -43,7 +42,7 @@ class ChatController extends AbstractController
             $response = $http->request('POST', 'http://host.docker.internal:11434/api/generate', [
                 'json' => [
                     'model' => 'openhermes',
-                    'prompt' => $fullPrompt, // <- Mit Kontext!
+                    'prompt' => $fullPrompt,
                     'stream' => false
                 ],
                 'timeout' => 120
@@ -79,17 +78,17 @@ class ChatController extends AbstractController
         }
     }
 
-    private function buildProjectContext(?int $projectId, EntityManagerInterface $em): string
+    private function buildProjectContext(?string $projectSlug, EntityManagerInterface $em): string
     {
-        if (!$projectId) {
+        if (!$projectSlug) {
             return "=== CONTEXT ===\nNo specific project selected. You are a general writing assistant.";
         }
 
         try {
-            // Projekt laden
-            $project = $em->getRepository(\App\Entity\Project::class)->find($projectId);
+            // Projekt über Slug laden
+            $project = $em->getRepository(\App\Entity\Project::class)->findOneBy(['slug' => $projectSlug]);
             if (!$project) {
-                error_log("ChatController DEBUG: Project $projectId not found");
+                error_log("ChatController DEBUG: Project '$projectSlug' not found");
                 return "=== CONTEXT ===\nProject not found.";
             }
 
@@ -122,7 +121,7 @@ class ChatController extends AbstractController
 
             // Notizen hinzufügen
             $notes = $em->getRepository(\App\Entity\Note::class)->findBy(
-                ['project' => $projectId], 
+                ['project' => $project], 
                 ['id' => 'DESC'], 
                 3
             );
@@ -157,4 +156,3 @@ class ChatController extends AbstractController
         }
     }
 }
-?>

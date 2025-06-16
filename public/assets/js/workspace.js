@@ -178,7 +178,7 @@ function saveContent(isManual = true) {
     const content = $('#summernote-editor').summernote('code');
     console.log('💾 Speichere Content für Projekt:', projectSlug, 'Länge:', content.length);
     
-    fetch('/api/textdocument/save-by-slug', {
+    fetch('/api/textdocument/save', {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json' 

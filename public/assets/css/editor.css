@@ -1,47 +1,50 @@
 /* public/assets/css/editor.css */
 .ProseMirror {
-  outline: none;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  min-height: 300px;
-  padding: 1rem;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  height: 100%;
+    outline: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    min-height: 300px;
+    padding: 1rem;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    height: 100%;
 }
 
 #editor,
 .info-box,
 .llm-chat {
-  background: #f2f2f2;
-  padding: 5px;
+    background: #f2f2f2;
+    padding: 5px;
 }
 
 
 #editorpage {
-  height: calc(100% - 43px);
+    height: calc(100% - 43px);
 }
+
 .editorsite .col-12.flex-column {
-  padding: 15px !important;
+    padding: 15px !important;
 }
 
-.editor-toolbar .input-group {
+.editor-toolbar .input-group {}
 
-}
 .editor-toolbar #font-size.form-select {
-  width: 20px;
-  padding: 4px 37px 4px 0px;
-  width: 0px !important;
+    width: 20px;
+    padding: 4px 37px 4px 0px;
+    width: 0px !important;
 }
+
 .editor-toolbar #font-size-input.form-control {
-  width: 42px;
-  padding: 4px 0px;
+    width: 42px;
+    padding: 4px 0px;
 }
+
 .note-editor,
 .note-editing-area {
-  height: 100%;
+    height: 100%;
 }
+
 /* Editor Container muss Flex sein */
 .editor-side {
     display: flex;
@@ -59,7 +62,8 @@
 .note-editor {
     flex: 1;
     min-height: 300px;
-    max-height: calc(100vh - 150px); /* Verhindert Überlauf */
+    max-height: calc(100vh - 150px);
+    /* Verhindert Überlauf */
     display: flex;
     flex-direction: column;
 }
@@ -72,7 +76,8 @@
 
 .note-editable {
     flex: 1;
-    overflow-y: auto; /* Scrollbar wenn nötig */
+    overflow-y: auto;
+    /* Scrollbar wenn nötig */
 }
 
 /* ====================================================
@@ -103,10 +108,21 @@
     font-weight: 600;
 }
 
-#note-content-display h1 { font-size: 1.5rem; }
-#note-content-display h2 { font-size: 1.3rem; }
-#note-content-display h3 { font-size: 1.1rem; }
-#note-content-display h4 { font-size: 1rem; }
+#note-content-display h1 {
+    font-size: 1.5rem;
+}
+
+#note-content-display h2 {
+    font-size: 1.3rem;
+}
+
+#note-content-display h3 {
+    font-size: 1.1rem;
+}
+
+#note-content-display h4 {
+    font-size: 1rem;
+}
 
 #note-content-display p {
     margin: 0.75rem 0;
@@ -189,7 +205,7 @@
 
 .note-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-color: #3498db;
 }
 
@@ -284,12 +300,12 @@
         font-size: 0.8rem;
         -webkit-line-clamp: 3;
     }
-    
+
     #note-content-display {
         padding: 1rem;
         font-size: 0.9rem;
     }
-    
+
     #note-editor-section {
         padding: 1rem;
     }
@@ -308,8 +324,13 @@
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Success Highlight für neue Notizen */
@@ -318,62 +339,152 @@
 }
 
 @keyframes highlight-success {
-    0% { background-color: #d4edda; border-color: #28a745; }
-    100% { background-color: transparent; border-color: #dee2e6; }
+    0% {
+        background-color: #d4edda;
+        border-color: #28a745;
+    }
+
+    100% {
+        background-color: transparent;
+        border-color: #dee2e6;
+    }
 }
 
 
 /* Custom Styles für die neue Notizen-Sidebar */
-					.notes-workspace {
-						min-height: 400px;
-					}
+.notes-workspace {
+    min-height: 400px;
+}
 
-					.notes-header {
-						background-color: #f8f9fa;
-					}
+.notes-header {
+    background-color: #f8f9fa;
+}
 
-					#main-note-textarea {
-						border: none;
-						outline: none;
-						background: transparent;
-					}
+#main-note-textarea {
+    border: none;
+    outline: none;
+    background: transparent;
+}
 
-					#main-note-textarea:focus {
-						box-shadow: none;
-						border: 1px solid #86b7fe;
-					}
+#main-note-textarea:focus {
+    box-shadow: none;
+    border: 1px solid #86b7fe;
+}
 
-					/* Dropdown Notizen-Liste */
-					#notes-dropdown-list .dropdown-item {
-						padding: 0.5rem 1rem;
-						cursor: pointer;
-					}
+/* Dropdown Notizen-Liste */
+#notes-dropdown-list .dropdown-item {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+}
 
-					#notes-dropdown-list .dropdown-item:hover {
-						background-color: #f8f9fa;
-					}
+#notes-dropdown-list .dropdown-item:hover {
+    background-color: #f8f9fa;
+}
 
-					#notes-dropdown-list .dropdown-item.active {
-						background-color: #e7f3ff;
-						color: #0056b3;
-					}
+#notes-dropdown-list .dropdown-item.active {
+    background-color: #e7f3ff;
+    color: #0056b3;
+}
 
-					/* LLM Chat minimiert/maximiert */
-					#llm-content.collapsed {
-						display: none;
-					}
+/* LLM Chat minimiert/maximiert */
+#llm-content.collapsed {
+    display: none;
+}
 
-					/* Responsive Anpassungen */
-					@media(max-width: 768px) {
-						.note-side {
-							margin-top: 1rem;
-						}
+/* Responsive Anpassungen */
+@media(max-width: 768px) {
+    .note-side {
+        margin-top: 1rem;
+    }
 
-						.notes-workspace {
-							min-height: 300px;
-						}
+    .notes-workspace {
+        min-height: 300px;
+    }
 
-						#main-note-textarea {
-							min-height: 200px;
-						}
-					}
+    #main-note-textarea {
+        min-height: 200px;
+    }
+}
+
+/* Summernote Dropdown Fixes */
+
+/* Dropdown z-index über alles andere */
+.note-editor .note-dropdown-menu {
+    z-index: 9999 !important;
+    position: absolute !important;
+    background: white !important;
+    border: 1px solid #ddd !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Font-Familie Dropdown */
+.note-fontname .note-dropdown-menu {
+    min-width: 160px !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+}
+
+/* Font-Größe Dropdown */
+.note-fontsize .note-dropdown-menu {
+    min-width: 60px !important;
+}
+
+/* Heading Dropdown */
+.note-para .note-dropdown-menu {
+    min-width: 120px !important;
+}
+
+/* Color-Palette */
+.note-color .note-dropdown-menu {
+    min-width: 280px !important;
+}
+
+/* Dropdown Items */
+.note-dropdown-item {
+    padding: 5px 12px !important;
+    display: block !important;
+    width: 100% !important;
+    text-align: left !important;
+    background: none !important;
+    border: none !important;
+    color: #333 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+}
+
+.note-dropdown-item:hover {
+    background-color: #f8f9fa !important;
+    color: #333 !important;
+}
+
+/* Fix für Bootstrap Modal Konflikte */
+.modal-open .note-editor .note-dropdown-menu {
+    z-index: 10000 !important;
+}
+
+/* Toolbar Button States */
+.note-toolbar .note-btn {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.note-toolbar .note-btn:focus,
+.note-toolbar .note-btn:active {
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25) !important;
+}
+
+/* Dropdown Toggle Button */
+.note-toolbar .note-btn.dropdown-toggle::after {
+    margin-left: 4px !important;
+    vertical-align: middle !important;
+}
+
+/* Fullscreen Mode */
+.note-editor.fullscreen {
+    z-index: 9998 !important;
+}
+
+.note-editor.fullscreen .note-dropdown-menu {
+    z-index: 9999 !important;
+}
