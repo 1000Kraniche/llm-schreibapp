@@ -296,32 +296,7 @@ function saveAsNote() {
     });
 }
 
-// ====================================================
-// LLM CHAT INITIALISIERUNG
-// ====================================================
 
-function initializeLLMChat() {
-    console.log('🤖 LLM Chat wird initialisiert');
-    
-    const llmForm = document.getElementById('llm-form');
-    if (llmForm) {
-        llmForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const input = document.getElementById('llm-input');
-            const query = input.value.trim();
-            
-            if (query) {
-                console.log('🤖 LLM Query:', query);
-                // TODO: LLM-Integration implementieren
-                showTempMessage('LLM-Integration noch nicht implementiert', 'info');
-                input.value = '';
-            }
-        });
-        
-        console.log('✅ LLM Form Event-Listener hinzugefügt');
-    }
-}
 
 // ====================================================
 // GLOBALE FUNKTIONEN VERFÜGBAR MACHEN
@@ -332,7 +307,7 @@ window.showWordCount = showWordCount;
 window.toggleAutoSave = toggleAutoSave;
 window.saveAsNote = saveAsNote;
 window.initializeSummernoteEditor = initializeSummernoteEditor;
-window.initializeLLMChat = initializeLLMChat;
+
 
 // ====================================================
 // INITIALIZATION
@@ -349,12 +324,6 @@ $(document).ready(function() {
             initializeSummernoteEditor();
         } catch (error) {
             console.error('❌ Fehler beim Initialisieren des Editors:', error);
-        }
-        
-        try {
-            initializeLLMChat();
-        } catch (error) {
-            console.error('❌ Fehler beim Initialisieren des LLM Chats:', error);
         }
         
         console.log('✅ Workspace Initialisierung abgeschlossen');
