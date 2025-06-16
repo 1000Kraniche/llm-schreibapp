@@ -1,29 +1,30 @@
 // ====================================================
-// NOTES-MANAGER.JS - Korrigierte Version ohne Syntax-Fehler
+// NOTES-MANAGER.JS - VOLLSTÄNDIG KORRIGIERTE VERSION
 // ====================================================
 
 console.log('📝 Notes-Manager.js wird geladen...');
 
-// Globale Variablen für Notizen (mit notes- Prefix um Konflikte zu vermeiden)
+// Globale Variablen für Notizen (KORRIGIERT für Slugs)
 let allNotes = [];
 let currentFolderId = null;
 let currentNoteId = null;
-let notesProjectId = null;
+let notesProjectSlug = null; // ✅ KORRIGIERT: Von notesProjectId zu notesProjectSlug
 
 // ====================================================
 // NOTIZEN LADEN UND ANZEIGEN
 // ====================================================
 
 async function loadNotes() {
-    if (!notesProjectId) {
-        console.error('❌ Keine Projekt-ID für Notizen-Load');
+    if (!notesProjectSlug) { // ✅ KORRIGIERT: Richtige Variable
+        console.error('❌ Keine Projekt-Slug für Notizen-Load');
         return;
     }
     
-    console.log('📝 Lade Notizen für Projekt:', notesProjectId);
+    console.log('📝 Lade Notizen für Projekt:', notesProjectSlug);
     
     try {
-        const response = await fetch('/api/notes/project/' + notesProjectId);
+        // ✅ KORRIGIERT: API-Call mit Slug statt ID
+        const response = await fetch('/api/notes/project-slug/' + notesProjectSlug);
         if (response.ok) {
             allNotes = await response.json();
             console.log('✅ Notizen geladen:', allNotes.length, 'Stück');
@@ -80,13 +81,15 @@ function renderNotesList() {
                     <div class="card h-100 folder-card" onclick="navigateToFolder(${note.id})">
                         <div class="card-body text-center p-3">
                             <i class="fas fa-folder fa-2x text-warning mb-2"></i>
-                            <h6 class="card-title small">${escapeHtml(note.title)}</h6>
+                            <h6 class="card-title small">${note.title}</h6>
                             <small class="text-muted">Ordner</small>
                         </div>
                     </div>
                 </div>
             `;
         } else {
+            // ✅ FIX: Titel direkt anzeigen ohne escapeHtml
+            const displayTitle = note.title || 'Unbenannte Notiz';
             html += `
                 <div class="col-md-3 col-sm-4 col-6">
                     <div class="card h-100 note-card" onclick="openNote(${note.id})" data-note-id="${note.id}">
@@ -98,7 +101,7 @@ function renderNotesList() {
                                 <i class="fas fa-trash fa-xs"></i>
                             </button>
                             <i class="fas fa-sticky-note fa-2x text-info mb-2"></i>
-                            <h6 class="card-title small">${escapeHtml(note.title)}</h6>
+                            <h6 class="card-title small">${displayTitle}</h6>
                             <small class="text-muted">ID: ${note.id}</small>
                         </div>
                     </div>
@@ -146,6 +149,8 @@ function renderNotesInModalBody() {
         `;
     } else {
         allNotes.slice(0, 12).forEach(note => { // Erste 12 anzeigen
+            // ✅ FIX: Titel direkt anzeigen ohne escapeHtml
+            const displayTitle = note.title || 'Unbenannte Notiz';
             html += `
                 <div class="col-md-3 col-sm-4 col-6">
                     <div class="card h-100 note-card" onclick="openNote(${note.id})" style="cursor: pointer;">
@@ -157,7 +162,7 @@ function renderNotesInModalBody() {
                                 <i class="fas fa-trash fa-xs"></i>
                             </button>
                             <i class="fas fa-sticky-note fa-2x text-info mb-2"></i>
-                            <h6 class="card-title small">${escapeHtml(note.title)}</h6>
+                            <h6 class="card-title small">${displayTitle}</h6>
                             <small class="text-muted">Notiz</small>
                         </div>
                     </div>
@@ -196,11 +201,13 @@ function loadSidebarNotes() {
     
     let html = '<ul class="list-unstyled">';
     recentNotes.forEach(note => {
+        // ✅ FIX: HTML in Titeln richtig anzeigen, nicht escapen
+        const displayTitle = note.title || 'Unbenannte Notiz';
         html += `
             <li class="mb-2">
                 <a href="#" onclick="openNoteDirectFromSidebar(${note.id})" class="text-decoration-none">
                     <i class="fas fa-sticky-note text-info me-1"></i>
-                    <small>${escapeHtml(note.title)}</small>
+                    <small>${displayTitle}</small>
                 </a>
             </li>
         `;
@@ -228,8 +235,8 @@ async function createNewNote() {
     const title = prompt('Notiz-Titel:', 'Neue Notiz');
     if (!title || !title.trim()) return;
     
-    if (!notesProjectId) {
-        console.error('❌ Keine Projekt-ID zum Erstellen der Notiz');
+    if (!notesProjectSlug) { // ✅ KORRIGIERT: Richtige Variable
+        console.error('❌ Keine Projekt-Slug zum Erstellen der Notiz');
         return;
     }
     
@@ -241,7 +248,7 @@ async function createNewNote() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 title: title.trim(),
-                project_id: notesProjectId,
+                project_slug: notesProjectSlug, // ✅ KORRIGIERT: Slug statt ID
                 parent_id: currentFolderId
             })
         });
@@ -265,6 +272,70 @@ async function createNewNote() {
     }
 }
 
+async function saveQuickNote() {
+    const content = $('#quick-note-content').val().trim();
+    if (!content) {
+        showTempMessage('Bitte gib einen Text ein', 'warning');
+        return;
+    }
+    
+    if (!notesProjectSlug) { // ✅ KORRIGIERT: Richtige Variable
+        showTempMessage('Keine Projekt-Slug gefunden', 'warning');
+        return;
+    }
+    
+    // Benutzer nach Titel fragen
+    const suggestedTitle = content.length > 50 ? content.substring(0, 47) + '...' : content;
+    const title = prompt('Titel für die Notiz:', suggestedTitle);
+    
+    if (!title || !title.trim()) {
+        return; // Benutzer hat abgebrochen
+    }
+    
+    console.log('📝 Speichere Schnelle Notiz mit Titel:', title);
+    
+    try {
+        const response = await fetch('/api/notes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: title.trim(),
+                content: content,
+                project_slug: notesProjectSlug // ✅ KORRIGIERT: Slug statt ID
+            })
+        });
+        
+        if (response.ok) {
+            const newNote = await response.json();
+            
+            // Lokale Liste aktualisieren
+            allNotes.unshift(newNote); // Am Anfang einfügen
+            
+            // Sidebar sofort aktualisieren
+            loadSidebarNotes();
+            
+            // Input leeren
+            $('#quick-note-content').val('');
+            
+            showTempMessage('Notiz "' + title + '" gespeichert!', 'success');
+            console.log('✅ Schnelle Notiz gespeichert mit ID:', newNote.id);
+            
+            // Neue Notiz in Sidebar hervorheben
+            setTimeout(() => {
+                highlightNewNoteInSidebar(newNote.id);
+            }, 100);
+            
+        } else {
+            const error = await response.json();
+            showTempMessage('Fehler: ' + (error.error || 'Unbekannter Fehler'), 'danger');
+        }
+    } catch (error) {
+        console.error('❌ Fehler beim Speichern:', error);
+        showTempMessage('Fehler beim Speichern: ' + error.message, 'danger');
+    }
+}
+
+// Rest der Funktionen bleiben gleich...
 async function openNote(noteId) {
     console.log('📖 Öffne Notiz mit ID:', noteId, '(Type:', typeof noteId, ')');
     
@@ -440,82 +511,6 @@ async function saveCurrentNote() {
     }
 }
 
-async function saveQuickNote() {
-    const content = $('#quick-note-content').val().trim();
-    if (!content) {
-        showTempMessage('Bitte gib einen Text ein', 'warning');
-        return;
-    }
-    
-    if (!notesProjectId) {
-        showTempMessage('Keine Projekt-ID gefunden', 'warning');
-        return;
-    }
-    
-    // Benutzer nach Titel fragen
-    const suggestedTitle = content.length > 50 ? content.substring(0, 47) + '...' : content;
-    const title = prompt('Titel für die Notiz:', suggestedTitle);
-    
-    if (!title || !title.trim()) {
-        return; // Benutzer hat abgebrochen
-    }
-    
-    console.log('📝 Speichere Schnelle Notiz mit Titel:', title);
-    
-    try {
-        const response = await fetch('/api/notes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: title.trim(),
-                content: content,
-                project_id: notesProjectId
-            })
-        });
-        
-        if (response.ok) {
-            const newNote = await response.json();
-            
-            // Lokale Liste aktualisieren
-            allNotes.unshift(newNote); // Am Anfang einfügen
-            
-            // Sidebar sofort aktualisieren
-            loadSidebarNotes();
-            
-            // Input leeren
-            $('#quick-note-content').val('');
-            
-            showTempMessage('Notiz "' + title + '" gespeichert!', 'success');
-            console.log('✅ Schnelle Notiz gespeichert mit ID:', newNote.id);
-            
-            // Neue Notiz in Sidebar hervorheben
-            setTimeout(() => {
-                highlightNewNoteInSidebar(newNote.id);
-            }, 100);
-            
-        } else {
-            const error = await response.json();
-            showTempMessage('Fehler: ' + (error.error || 'Unbekannter Fehler'), 'danger');
-        }
-    } catch (error) {
-        console.error('❌ Fehler beim Speichern:', error);
-        showTempMessage('Fehler beim Speichern: ' + error.message, 'danger');
-    }
-}
-
-function highlightNewNoteInSidebar(noteId) {
-    // Finde die neue Notiz in der Sidebar und hebe sie hervor
-    const noteLink = $(`#sidebar-notes-list a[onclick*="${noteId}"]`);
-    if (noteLink.length > 0) {
-        noteLink.addClass('bg-success bg-opacity-25 rounded p-1');
-        
-        // Animation entfernen nach 3 Sekunden
-        setTimeout(() => {
-            noteLink.removeClass('bg-success bg-opacity-25');
-        }, 3000);
-    }
-}
-
 async function deleteCurrentNote() {
     if (!currentNoteId) {
         showTempMessage('Keine Notiz geöffnet', 'warning');
@@ -576,7 +571,7 @@ function deleteNoteFromGrid(noteId, event) {
                 // Notiz aus der lokalen Liste entfernen
                 allNotes = allNotes.filter(n => n.id !== noteId);
                 renderNotesList();
-                loadSidebarNotes();
+                loadSidebarNotes(); // ✅ FIX: Sidebar sofort aktualisieren
                 showTempMessage('Notiz gelöscht!', 'success');
             } else {
                 showTempMessage('Fehler beim Löschen', 'danger');
@@ -641,6 +636,19 @@ function openNotesModal() {
     }, 500);
 }
 
+function highlightNewNoteInSidebar(noteId) {
+    // Finde die neue Notiz in der Sidebar und hebe sie hervor
+    const noteLink = $(`#sidebar-notes-list a[onclick*="${noteId}"]`);
+    if (noteLink.length > 0) {
+        noteLink.addClass('bg-success bg-opacity-25 rounded p-1');
+        
+        // Animation entfernen nach 3 Sekunden
+        setTimeout(() => {
+            noteLink.removeClass('bg-success bg-opacity-25');
+        }, 3000);
+    }
+}
+
 // ====================================================
 // HILFSFUNKTIONEN
 // ====================================================
@@ -689,15 +697,18 @@ window.highlightNewNoteInSidebar = highlightNewNoteInSidebar;
 $(document).ready(function() {
     console.log('📋 Notes-Manager initialisiert');
     
-    // Project ID extrahieren
+    // ✅ KORRIGIERT: Projekt-Slug extrahieren
     const workspaceElement = document.querySelector('[data-project-slug]');
     if (workspaceElement) {
-    notesProjectSlug = workspaceElement.dataset.projectSlug;
+        notesProjectSlug = workspaceElement.dataset.projectSlug;
+        console.log('📊 Project Slug für Notizen:', notesProjectSlug);
         
         // Sidebar-Notizen sofort laden
         setTimeout(() => {
             loadNotes();
         }, 1000);
+    } else {
+        console.error('❌ Kein data-project-slug Element gefunden!');
     }
     
     // Modal-Reset bei jedem Öffnen (Bootstrap-Event)
@@ -709,7 +720,76 @@ $(document).ready(function() {
     });
 });
 
+// === HTML DISPLAY FIX - AM ENDE HINZUFÜGEN ===
+window.openNote = async function(noteId) {
+    console.log('📖 Öffne Notiz:', noteId);
+    
+    const numericNoteId = parseInt(noteId);
+    if (isNaN(numericNoteId)) {
+        console.error('❌ Ungültige Notiz-ID:', noteId);
+        showTempMessage('Ungültige Notiz-ID', 'danger');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/notes/' + numericNoteId);
+        if (response.ok) {
+            const note = await response.json();
+            
+            // Modal-Ansicht wechseln
+            $('#notes-content').hide();
+            $('#note-editor-section').show();
+            
+            // Notiz-Daten laden
+            $('#current-note-title').text(note.title);
+            $('#note-title-input').val(note.title);
+            $('#note-content').val(note.content || '');
+            
+            // ✅ WICHTIG: HTML rendern statt als Text anzeigen
+            const displayDiv = $('#note-content-display');
+            if (note.content && note.content.trim()) {
+                displayDiv.html(note.content);  // HTML rendern
+                displayDiv.show();
+                $('#note-content').hide();
+                $('#view-toggle-text').text('Text bearbeiten');
+                $('#view-toggle-icon').removeClass('fa-eye').addClass('fa-edit');
+            } else {
+                displayDiv.hide();
+                $('#note-content').show();
+                $('#view-toggle-text').text('HTML-Ansicht');
+                $('#view-toggle-icon').removeClass('fa-edit').addClass('fa-eye');
+            }
+            
+            currentNoteId = numericNoteId;
+            console.log('✅ Notiz geladen');
+        } else {
+            showTempMessage('Fehler beim Laden der Notiz', 'danger');
+        }
+    } catch (error) {
+        console.error('❌ Fehler:', error);
+        showTempMessage('Fehler: ' + error.message, 'danger');
+    }
+};
 
-console.log('📝 Notes-Manager.js geladen!');
-
-
+// Toggle-Funktion verbessern
+window.toggleNoteContentView = function() {
+    const displayDiv = $('#note-content-display');
+    const textArea = $('#note-content');
+    
+    if (displayDiv.is(':visible')) {
+        // Zu Editor wechseln
+        displayDiv.hide();
+        textArea.show();
+        textArea.focus();
+        $('#view-toggle-text').text('HTML-Ansicht');
+        $('#view-toggle-icon').removeClass('fa-edit').addClass('fa-eye');
+    } else {
+        // Zu HTML-Ansicht wechseln
+        const content = textArea.val();
+        displayDiv.html(content);  // HTML rendern
+        displayDiv.show();
+        textArea.hide();
+        $('#view-toggle-text').text('Text bearbeiten');
+        $('#view-toggle-icon').removeClass('fa-eye').addClass('fa-edit');
+    }
+};

@@ -1,11 +1,11 @@
 // ====================================================
-// WORKSPACE.JS - Nur für den Editor-Workspace
+// WORKSPACE.JS - VOLLSTÄNDIG KORRIGIERTE VERSION
 // ====================================================
 
 console.log('🚀 Workspace.js wird geladen...');
 
-// Globale Variablen
-let projectId = null;
+// Globale Variablen (KORRIGIERT für Slugs)
+let projectSlug = null; // ✅ KORRIGIERT: Von projectId zu projectSlug
 let documentId = null;
 let autoSaveEnabled = true;
 let hasUnsavedChanges = false;
@@ -32,11 +32,13 @@ function initializeSummernoteEditor() {
     
     console.log('✅ jQuery und Summernote verfügbar');
     
-    // Projekt-Daten aus HTML extrahieren
+    // ✅ KORRIGIERT: Projekt-Daten aus HTML extrahieren
     const mainElement = document.querySelector('[data-project-slug]');
     if (mainElement) {
-    projectSlug = mainElement.dataset.projectSlug;
- 
+        projectSlug = mainElement.dataset.projectSlug; // ✅ KORRIGIERT: Richtige Variable
+        console.log('📊 Project Slug gefunden:', projectSlug);
+    } else {
+        console.error('❌ Kein data-project-slug Element gefunden!');
     }
 
     const editorElement = $('#summernote-editor');
@@ -187,22 +189,22 @@ function updateWordCount(content) {
 }
 
 function saveContent(isManual = true) {
-    if (!projectId) {
-        console.error('❌ Keine Projekt-ID zum Speichern!');
+    if (!projectSlug) { // ✅ KORRIGIERT: Richtige Variable
+        console.error('❌ Keine Projekt-Slug zum Speichern!');
         return;
     }
     
     const content = $('#summernote-editor').summernote('code');
-    console.log('💾 Speichere Content für Projekt:', projectId, 'Länge:', content.length);
+    console.log('💾 Speichere Content für Projekt:', projectSlug, 'Länge:', content.length);
     
-    // ECHTER API-Call zum Speichern
-    fetch('/api/textdocument/save', {
+    // ✅ KORRIGIERT: API-Call mit Slug
+    fetch('/api/textdocument/save-by-slug', {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json' 
         },
         body: JSON.stringify({
-            project_id: projectId,
+            project_slug: projectSlug, // ✅ KORRIGIERT: Slug statt ID
             content: content
         })
     })
@@ -265,8 +267,8 @@ function toggleAutoSave() {
 }
 
 function saveAsNote() {
-    if (!projectId) {
-        showTempMessage('Keine Projekt-ID gefunden', 'warning');
+    if (!projectSlug) { // ✅ KORRIGIERT: Richtige Variable
+        showTempMessage('Keine Projekt-Slug gefunden', 'warning');
         return;
     }
     
@@ -293,14 +295,14 @@ function saveAsNote() {
     
     console.log('📝 Speichere Editor-Inhalt als Notiz:', title);
     
-    // API-Call zum Erstellen der Notiz
+    // ✅ KORRIGIERT: API-Call zum Erstellen der Notiz mit Slug
     fetch('/api/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             title: title.trim(),
             content: content,
-            project_id: projectId
+            project_slug: projectSlug // ✅ KORRIGIERT: Slug statt ID
         })
     })
     .then(response => response.json())
@@ -409,11 +411,6 @@ function initializeLLMChat() {
         
         console.log('🤖 LLM Anfrage:', prompt.substring(0, 50) + '...');
         
-        
-       // Projekt-ID aus dem Data-Attribut holen
-const projectSlug = $('[data-project-slug]').data('project-slug');
-
-        
         $('#llm-response').html(`
             <div class="d-flex align-items-center">
                 <i class="fas fa-spinner fa-spin me-2"></i> 
@@ -421,15 +418,15 @@ const projectSlug = $('[data-project-slug]').data('project-slug');
             </div>
         `);
         
-        // LLM-API aufrufen
+        // ✅ KORRIGIERT: LLM-API mit Slug
         fetch('/api/llm/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-        prompt: prompt,
-        project_id: projectId  // <- NEU: Projekt-ID mitsenden
-    })
-})
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                prompt: prompt,
+                project_slug: projectSlug // ✅ KORRIGIERT: Slug statt ID
+            })
+        })
         .then(response => response.json())
         .then(data => {
             console.log('✅ LLM Antwort erhalten');

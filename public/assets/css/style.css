@@ -324,7 +324,7 @@ header ul {
   left: 200px;
   display: flex;
   width: calc(100% - 200px);
-  height: 100vh;
+  min-height: 100vh;
 
 }
 
@@ -400,3 +400,7 @@ header ul {
 			padding: 2px 4px;
 			border-radius: 3px;
 		}
+
+    footer {
+      background: rgba(0, 0, 0, 0.7);
+    }

@@ -1,14 +1,13 @@
 // ====================================================
-// NOTIZEN-SIDEBAR LOGIC
+// NOTIZEN-SIDEBAR LOGIC - KORRIGIERT FÜR SLUGS
 // ====================================================
-
 
 // Lokale Variablen für Sidebar
 let noteAutoSaveEnabled = true;
 let noteHasUnsavedChanges = false;
 let sidebarNotes = [];
 let currentNoteData = null;
-
+let sidebarProjectSlug = null; // ✅ KORRIGIERT: Slug statt ID
 
 // ====================================================
 // SIDEBAR NOTIZEN LADEN
@@ -33,15 +32,25 @@ async function loadSidebarNotes() {
     // Fallback: eigener API-Call (nur wenn notes-manager fehlschlägt)
     console.log('⚠️ Fallback: Eigener API-Call...');
     
-    if (!projectId) {
-        console.error('❌ Keine Projekt-ID für Sidebar-Notizen');
+    // ✅ KORRIGIERT: Slug extrahieren
+    if (!sidebarProjectSlug) {
+        const workspaceElement = document.querySelector('[data-project-slug]');
+        if (workspaceElement) {
+            sidebarProjectSlug = workspaceElement.dataset.projectSlug;
+            console.log('📊 Sidebar Project Slug extrahiert:', sidebarProjectSlug);
+        }
+    }
+    
+    if (!sidebarProjectSlug) {
+        console.error('❌ Keine Projekt-Slug für Sidebar-Notizen');
         return;
     }
     
     try {
-        console.log('📋 Lade Sidebar-Notizen für Projekt:', projectId);
+        console.log('📋 Lade Sidebar-Notizen für Projekt:', sidebarProjectSlug);
         
-        const response = await fetch(`/api/notes/${projectId}`);
+        // ✅ KORRIGIERT: Slug-basierter API-Call
+        const response = await fetch(`/api/notes/project-slug/${sidebarProjectSlug}`);
         if (response.ok) {
             sidebarNotes = await response.json();
             console.log('✅ Sidebar-Notizen geladen:', sidebarNotes.length, 'Stück');
@@ -80,32 +89,20 @@ function renderNotesDropdown() {
     let html = '';
     sidebarNotes.forEach(note => {
         const isActive = note.id === currentNoteId ? 'active' : '';
-        const truncatedTitle = note.title.length > 30 ? note.title.substring(0, 30) + '...' : note.title;
+        const truncatedTitle = note.title.length > 30 ? 
+            note.title.substring(0, 27) + '...' : note.title;
         
         html += `
             <li>
-                <button class="dropdown-item ${isActive}" data-note-id="${note.id}">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span>
-                            <i class="fas fa-sticky-note text-info me-2"></i>
-                            ${escapeHtml(truncatedTitle)}
-                        </span>
-                        ${isActive ? '<i class="fas fa-check text-success"></i>' : ''}
-                    </div>
-                </button>
+                <a class="dropdown-item ${isActive}" href="#" onclick="loadNoteIntoSidebar(${note.id})">
+                    <i class="fas fa-sticky-note text-info me-2"></i>
+                    ${truncatedTitle}
+                </a>
             </li>
         `;
     });
     
     container.innerHTML = html;
-    
-    // Event-Listener für alle Buttons hinzufügen
-    container.querySelectorAll('[data-note-id]').forEach(button => {
-        button.addEventListener('click', function() {
-            const noteId = parseInt(this.dataset.noteId);
-            loadNoteIntoSidebar(noteId);
-        });
-    });
 }
 
 // ====================================================
@@ -113,34 +110,42 @@ function renderNotesDropdown() {
 // ====================================================
 
 async function loadNoteIntoSidebar(noteId) {
-    if (noteHasUnsavedChanges) {
-        if (!confirm('Du hast ungespeicherte Änderungen. Trotzdem zur anderen Notiz wechseln?')) {
-            return;
-        }
-    }
+    console.log('📝 Lade Notiz in Sidebar:', noteId);
     
     try {
-        console.log('📝 Lade Notiz in Sidebar:', noteId);
-        
         const response = await fetch(`/api/notes/${noteId}`);
         if (response.ok) {
-            currentNoteData = await response.json();
+            const note = await response.json();
+            currentNoteData = note;
             currentNoteId = noteId;
             
             // UI aktualisieren
+            const titleInput = document.getElementById('current-note-title-input');
+            const contentTextarea = document.getElementById('main-note-textarea');
+            const titleDisplay = document.getElementById('current-note-title-display');
+            const noteName = document.getElementById('current-note-name');
+            
+            if (titleInput) titleInput.value = note.title;
+            if (contentTextarea) contentTextarea.value = note.content || '';
+            if (titleDisplay) titleDisplay.textContent = note.title;
+            if (noteName) noteName.textContent = note.title;
+            
+            // Dropdown aktualisieren
+            renderNotesDropdown();
+            
+            // Status aktualisieren
+            updateNoteSaveStatus('Geladen');
+            
+            // Editor anzeigen
             showNoteEditor();
-            updateNoteDisplay();
             
-            // Dropdown schließen
-            const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('notesDropdown'));
-            if (dropdown) dropdown.hide();
-            
-            console.log('✅ Notiz in Sidebar geladen:', currentNoteData.title);
+            console.log('✅ Notiz in Sidebar geladen:', note.title);
         } else {
+            console.error('❌ Fehler beim Laden der Notiz:', response.status);
             showTempMessage('Fehler beim Laden der Notiz', 'danger');
         }
     } catch (error) {
-        console.error('❌ Fehler beim Laden der Notiz in Sidebar:', error);
+        console.error('❌ Fehler beim Laden der Notiz:', error);
         showTempMessage('Fehler beim Laden der Notiz: ' + error.message, 'danger');
     }
 }
@@ -148,68 +153,41 @@ async function loadNoteIntoSidebar(noteId) {
 function showNoteEditor() {
     console.log('🎯 showNoteEditor() aufgerufen');
     
-    const noNote = document.getElementById('no-note-selected');
-    const editor = document.getElementById('note-editor-area');
+    const noNoteDiv = document.getElementById('no-note-selected');
+    const editorDiv = document.getElementById('note-editor');
     
-    if (noNote) {
-        noNote.classList.add('d-none');
-        noNote.classList.remove('d-flex');
+    if (noNoteDiv) {
+        noNoteDiv.classList.add('d-none');
         console.log('✅ "Keine Notiz" versteckt mit Bootstrap');
     }
     
-    if (editor) {
-        editor.classList.remove('d-none');
-        editor.classList.add('d-flex', 'flex-column');
+    if (editorDiv) {
+        editorDiv.classList.remove('d-none');
         console.log('✅ "Editor" angezeigt mit Bootstrap');
     }
 }
 
 function showEmptyNotesState() {
-    const noNote = document.getElementById('no-note-selected');
-    const editor = document.getElementById('note-editor-area');
-    
-    if (editor) {
-        editor.classList.add('d-none');
-        editor.classList.remove('d-flex');
+    const container = document.getElementById('notes-dropdown-list');
+    if (container) {
+        container.innerHTML = `
+            <li>
+                <span class="dropdown-item-text text-muted small">
+                    <i class="fas fa-exclamation-triangle me-1"></i> 
+                    Fehler beim Laden
+                </span>
+            </li>
+        `;
     }
-    
-    if (noNote) {
-        noNote.classList.remove('d-none');
-        noNote.classList.add('d-flex');
-    }
-    
-    document.getElementById('current-note-name').textContent = 'Keine Notiz ausgewählt';
-}
-
-function updateNoteDisplay() {
-    if (!currentNoteData) return;
-    
-    // Header aktualisieren
-    document.getElementById('current-note-name').textContent = currentNoteData.title;
-    
-    // Titel anzeigen
-    document.getElementById('current-note-title-display').textContent = currentNoteData.title;
-    document.getElementById('current-note-title-input').value = currentNoteData.title;
-    
-    // Content in Textarea laden
-    const textarea = document.getElementById('main-note-textarea');
-    textarea.value = currentNoteData.content || '';
-    
-    // Status zurücksetzen
-    noteHasUnsavedChanges = false;
-    updateNoteSaveStatus('Geladen');
-    
-    // Dropdown neu rendern für aktive Markierung
-    renderNotesDropdown();
 }
 
 // ====================================================
 // NOTIZ SPEICHERN
 // ====================================================
 
-async function saveCurrentNote() {
-    if (!currentNoteId || !currentNoteData) {
-        showTempMessage('Keine Notiz zum Speichern ausgewählt', 'warning');
+async function saveCurrentNoteFromSidebar() {
+    if (!currentNoteId) {
+        showTempMessage('Keine Notiz ausgewählt', 'warning');
         return;
     }
     
@@ -245,9 +223,20 @@ async function saveCurrentNote() {
                 sidebarNotes[noteIndex] = updatedNote;
             }
             
+            // AUCH in allNotes aktualisieren (für Modal-Sync)
+            if (typeof allNotes !== 'undefined') {
+                const globalNoteIndex = allNotes.findIndex(n => n.id === currentNoteId);
+                if (globalNoteIndex !== -1) {
+                    allNotes[globalNoteIndex] = updatedNote;
+                }
+            }
+            
             // UI aktualisieren
-            document.getElementById('current-note-name').textContent = title;
-            document.getElementById('current-note-title-display').textContent = title;
+            const noteName = document.getElementById('current-note-name');
+            const titleDisplay = document.getElementById('current-note-title-display');
+            
+            if (noteName) noteName.textContent = title;
+            if (titleDisplay) titleDisplay.textContent = title;
             
             noteHasUnsavedChanges = false;
             updateNoteSaveStatus('Gespeichert');
@@ -294,13 +283,26 @@ async function createNewNoteFromSidebar() {
     const title = prompt('Notiz-Titel:', 'Neue Notiz');
     if (!title || !title.trim()) return;
     
+    // ✅ KORRIGIERT: Slug extrahieren falls nicht vorhanden
+    if (!sidebarProjectSlug) {
+        const workspaceElement = document.querySelector('[data-project-slug]');
+        if (workspaceElement) {
+            sidebarProjectSlug = workspaceElement.dataset.projectSlug;
+        }
+    }
+    
+    if (!sidebarProjectSlug) {
+        showTempMessage('❌ Keine Projekt-Slug gefunden', 'danger');
+        return;
+    }
+    
     try {
         const response = await fetch('/api/notes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 title: title.trim(),
-                project_id: projectId,
+                project_slug: sidebarProjectSlug, // ✅ KORRIGIERT: Slug statt ID
                 parent_id: null
             })
         });
@@ -325,159 +327,66 @@ async function createNewNoteFromSidebar() {
             await loadNoteIntoSidebar(newNote.id);
             
             showTempMessage('✅ Notiz "' + title + '" erstellt!', 'success');
+            console.log('✅ Neue Notiz erstellt mit ID:', newNote.id);
             
         } else {
             const error = await response.json();
-            showTempMessage('❌ Fehler: ' + (error.error || 'Unbekannter Fehler'), 'danger');
+            showTempMessage('❌ Fehler beim Erstellen: ' + (error.error || 'Unbekannter Fehler'), 'danger');
         }
     } catch (error) {
         console.error('❌ Fehler beim Erstellen der Notiz:', error);
-        showTempMessage('❌ Fehler beim Erstellen: ' + error.message, 'danger');
+        showTempMessage('❌ Fehler beim Erstellen der Notiz: ' + error.message, 'danger');
     }
 }
 
 // ====================================================
-// NOTIZ LÖSCHEN
+// GLOBALE FUNKTIONEN
 // ====================================================
 
-async function deleteCurrentNote() {
-    if (!currentNoteId || !currentNoteData) {
-        showTempMessage('Keine Notiz zum Löschen ausgewählt', 'warning');
-        return;
-    }
-    
-    if (!confirm(`Notiz "${currentNoteData.title}" wirklich löschen?`)) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/notes/${currentNoteId}`, {
-            method: 'DELETE'
-        });
-        
-        if (response.ok) {
-            // Aus der Liste entfernen
-            sidebarNotes = sidebarNotes.filter(n => n.id !== currentNoteId);
-            
-            // UI zurücksetzen
-            currentNoteId = null;
-            currentNoteData = null;
-            showEmptyNotesState();
-            renderNotesDropdown();
-            
-            showTempMessage('✅ Notiz gelöscht', 'success');
-            
-            // Erste verfügbare Notiz laden
-            if (sidebarNotes.length > 0) {
-                await loadNoteIntoSidebar(sidebarNotes[0].id);
-            }
-            
-        } else {
-            showTempMessage('❌ Fehler beim Löschen', 'danger');
-        }
-    } catch (error) {
-        console.error('❌ Fehler beim Löschen der Notiz:', error);
-        showTempMessage('❌ Fehler beim Löschen: ' + error.message, 'danger');
-    }
-}
+window.loadNoteIntoSidebar = loadNoteIntoSidebar;
+window.saveCurrentNoteFromSidebar = saveCurrentNoteFromSidebar;
+window.createNewNoteFromSidebar = createNewNoteFromSidebar;
+window.loadSidebarNotes = loadSidebarNotes;
 
 // ====================================================
-// TITEL BEARBEITEN
+// INITIALIZATION
 // ====================================================
 
-function editNoteTitle() {
-    const display = document.getElementById('current-note-title-display');
-    const input = document.getElementById('current-note-title-input');
-    const btn = document.getElementById('edit-title-btn');
+$(document).ready(function() {
+    console.log('📋 Notes-Sidebar initialisiert');
     
-    if (display.style.display === 'none') {
-        // Speichern und zurück zur Anzeige
-        const newTitle = input.value.trim();
-        if (newTitle && newTitle !== currentNoteData.title) {
+    // Project Slug extrahieren
+    const workspaceElement = document.querySelector('[data-project-slug]');
+    if (workspaceElement) {
+        sidebarProjectSlug = workspaceElement.dataset.projectSlug;
+        console.log('📊 Sidebar Project Slug:', sidebarProjectSlug);
+    }
+    
+    // Auto-Save für Sidebar-Notizen
+    const titleInput = document.getElementById('current-note-title-input');
+    const contentTextarea = document.getElementById('main-note-textarea');
+    
+    if (titleInput) {
+        titleInput.addEventListener('input', function() {
             noteHasUnsavedChanges = true;
             updateNoteSaveStatus('Ungespeichert');
-        }
-        
-        display.textContent = newTitle || currentNoteData.title;
-        display.style.display = 'block';
-        input.style.display = 'none';
-        btn.innerHTML = '<i class="fas fa-edit"></i> Titel bearbeiten';
-    } else {
-        // Wechsel zum Bearbeitungsmodus
-        display.style.display = 'none';
-        input.style.display = 'block';
-        input.focus();
-        input.select();
-        btn.innerHTML = '<i class="fas fa-check"></i> Titel übernehmen';
+        });
     }
-}
-
-// ====================================================
-// LLM CHAT TOGGLE
-// ====================================================
-
-function toggleLLMChat() {
-    const content = document.getElementById('llm-content');
-    const btn = document.getElementById('llm-toggle-btn');
     
-    if (content.classList.contains('collapsed')) {
-        content.classList.remove('collapsed');
-        content.style.display = 'block';
-        btn.innerHTML = '<i class="fas fa-chevron-up"></i>';
-    } else {
-        content.classList.add('collapsed');
-        content.style.display = 'none';
-        btn.innerHTML = '<i class="fas fa-chevron-down"></i>';
-    }
-}
-
-// ====================================================
-// EVENT LISTENERS
-// ====================================================
-
-function initializeSidebarNotes() {
-    console.log('📋 Initialisiere Sidebar-Notizen...');
-    
-    // Auto-Save für Notiz-Änderungen
-    const textarea = document.getElementById('main-note-textarea');
-    if (textarea) {
-        textarea.addEventListener('input', function() {
+    if (contentTextarea) {
+        contentTextarea.addEventListener('input', function() {
             noteHasUnsavedChanges = true;
             updateNoteSaveStatus('Ungespeichert');
             
             // Auto-Save nach 3 Sekunden
             if (noteAutoSaveEnabled) {
                 clearTimeout(window.noteAutoSaveTimer);
-                window.noteAutoSaveTimer = setTimeout(() => {
-                    saveCurrentNote();
+                window.noteAutoSaveTimer = setTimeout(function() {
+                    saveCurrentNoteFromSidebar();
                 }, 3000);
             }
         });
     }
-    
-    // Titel-Input Enter-Handler
-    const titleInput = document.getElementById('current-note-title-input');
-    if (titleInput) {
-        titleInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                editNoteTitle(); // Titel übernehmen
-            }
-        });
-    }
-    
-    // Notizen laden
-    if (projectId) {
-        loadSidebarNotes();
-    }
-    
-    console.log('✅ Sidebar-Notizen initialisiert');
-}
+});
 
-// Globale Funktionen verfügbar machen
-window.loadNoteIntoSidebar = loadNoteIntoSidebar;
-window.saveCurrentNote = saveCurrentNote;
-window.createNewNoteFromSidebar = createNewNoteFromSidebar;
-window.deleteCurrentNote = deleteCurrentNote;
-window.editNoteTitle = editNoteTitle;
-window.toggleLLMChat = toggleLLMChat;
-window.initializeSidebarNotes = initializeSidebarNotes;
+console.log('📝 Notes-Sidebar.js geladen!');
