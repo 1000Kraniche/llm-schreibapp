@@ -410,74 +410,6 @@ function editNoteTitle() {
 }
 
 // ====================================================
-// LLM CHAT (falls du das noch brauchst)
-// ====================================================
-
-function toggleLLMChat() {
-    const content = document.getElementById('llm-content');
-    const btn = document.getElementById('llm-toggle-btn');
-    
-    if (content && btn) {
-        if (content.classList.contains('collapsed')) {
-            content.classList.remove('collapsed');
-            btn.innerHTML = '<i class="fas fa-chevron-up"></i>';
-        } else {
-            content.classList.add('collapsed');
-            btn.innerHTML = '<i class="fas fa-chevron-down"></i>';
-        }
-    }
-}
-
-// ====================================================
-// STATUS UND HILFSFUNKTIONEN
-// ====================================================
-
-function updateNoteSaveStatus(status) {
-    const statusElement = document.getElementById('note-save-status');
-    if (statusElement) {
-        let icon = '💾';
-        let className = 'text-muted';
-        
-        switch (status) {
-            case 'Gespeichert':
-                icon = '✅';
-                className = 'text-success';
-                break;
-            case 'Ungespeichert':
-                icon = '⏳';
-                className = 'text-warning';
-                break;
-            case 'Fehler':
-                icon = '❌';
-                className = 'text-danger';
-                break;
-        }
-        
-        statusElement.innerHTML = `<span class="${className}">${icon} ${status}</span>`;
-    }
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function showTempMessage(message, type) {
-    const alertClass = `alert-${type}`;
-    const alertHtml = `<div class="alert ${alertClass} alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;">
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>`;
-    
-    $('body').append(alertHtml);
-    
-    setTimeout(function() {
-        $('.alert').fadeOut();
-    }, 3000);
-}
-
-// ====================================================
 // EXTERNE SYNCHRONISATION
 // ====================================================
 
@@ -552,7 +484,6 @@ window.saveCurrentNote = saveCurrentNote;
 window.createNewNoteFromSidebar = createNewNoteFromSidebar;
 window.deleteCurrentNote = deleteCurrentNote;
 window.editNoteTitle = editNoteTitle;
-window.toggleLLMChat = toggleLLMChat;
-window.initializeSidebarNotes = initializeSidebarNotes;
+
 
 console.log('📝 Notes-Sidebar.js geladen!');

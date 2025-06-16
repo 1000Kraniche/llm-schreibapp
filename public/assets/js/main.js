@@ -565,9 +565,9 @@ $(document).ready(function() {
     
     // Project ID aus Dataset extrahieren (falls nicht schon gemacht)
     if (!projectId) {
-        const workspaceElement = document.querySelector('[data-project-id]');
-        if (workspaceElement) {
-            projectId = workspaceElement.dataset.projectId;
+        const workspaceElement = document.querySelector('[data-project-slug]');
+if (workspaceElement) {
+    projectId = workspaceElement.dataset.projectSlug;
             console.log('📊 Project ID aus DOM extrahiert:', projectId);
         }
     }

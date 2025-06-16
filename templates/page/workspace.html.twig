@@ -248,64 +248,6 @@
 						</div>
 					</div>
 				</div>
-
-				<style>
-				/*Claude sag mal Moin*/
-					/* Custom Styles für die neue Notizen-Sidebar */
-					.notes-workspace {
-						min-height: 400px;
-					}
-
-					.notes-header {
-						background-color: #f8f9fa;
-					}
-
-					#main-note-textarea {
-						border: none;
-						outline: none;
-						background: transparent;
-					}
-
-					#main-note-textarea:focus {
-						box-shadow: none;
-						border: 1px solid #86b7fe;
-					}
-
-					/* Dropdown Notizen-Liste */
-					#notes-dropdown-list .dropdown-item {
-						padding: 0.5rem 1rem;
-						cursor: pointer;
-					}
-
-					#notes-dropdown-list .dropdown-item:hover {
-						background-color: #f8f9fa;
-					}
-
-					#notes-dropdown-list .dropdown-item.active {
-						background-color: #e7f3ff;
-						color: #0056b3;
-					}
-
-					/* LLM Chat minimiert/maximiert */
-					#llm-content.collapsed {
-						display: none;
-					}
-
-					/* Responsive Anpassungen */
-					@media(max-width: 768px) {
-						.note-side {
-							margin-top: 1rem;
-						}
-
-						.notes-workspace {
-							min-height: 300px;
-						}
-
-						#main-note-textarea {
-							min-height: 200px;
-						}
-					}
-				</style>
 			</div>
 		</section>
 
@@ -440,6 +382,6 @@
 	{# Getrennte JavaScript-Dateien #}
 
 	<script src="{{ asset('assets/js/notes-manager.js') }}"></script>
-	<script src="{{ asset('assets/js/notes-sidebar.js') }}"></script>
+	<script src="{{ asset('assets/js/sidebar.js') }}"></script>
 	<script src="{{ asset('assets/js/workspace.js') }}"></script>
 {% endblock %}
