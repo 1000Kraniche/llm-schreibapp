@@ -174,40 +174,34 @@ function showNotesError(message) {
  * Notiz in Sidebar laden UND Inhalt anzeigen (WENIGER MESSAGES)
  */
 async function loadNoteInSidebar(noteId) {
-    console.log('📝 Lade Notiz in Sidebar:', noteId);
-    
-    if (!noteId) {
-        console.error('❌ Keine Notiz-ID übergeben');
-        return;
-    }
+    console.log('📖 Lade Notiz in Sidebar:', noteId);
     
     try {
-        // API-Call für spezifische Notiz
         const response = await fetch(`/api/notes/${noteId}`);
         
         if (response.ok) {
             currentNoteData = await response.json();
             currentNoteId = noteId;
             
-            console.log('✅ Notiz geladen:', currentNoteData.title);
-            console.log('📄 Content Länge:', currentNoteData.content ? currentNoteData.content.length : 0);
+            console.log('✅ Notiz geladen:', currentNoteData.title, 
+                       'Content-Länge:', currentNoteData.content ? currentNoteData.content.length : 0);
             
-            // UI aktualisieren
-            updateNoteDisplay();
+            // NEUE METHODE: Verwende Sidebar-spezifische Update-Funktion
+            if (typeof updateSidebarNoteDisplay === 'function') {
+                updateSidebarNoteDisplay(currentNoteData);
+            } else {
+                // Fallback zur alten Methode
+                updateNoteDisplay();
+            }
+            
             showNoteEditor();
-            
-            // ENTFERNT: showTempMessage('✅ Notiz geladen: ' + currentNoteData.title, 'success');
             
         } else if (response.status === 404) {
             console.log('⚠️ Notiz nicht gefunden - aus Liste entfernen');
-            
-            // Notiz aus Sidebar-Liste entfernen
             sidebarNotes = sidebarNotes.filter(note => note.id !== noteId);
             renderNotesDropdown();
             showEmptyNotesState();
-            
             showTempMessage('⚠️ Notiz wurde gelöscht', 'warning');
-            
         } else {
             console.error('❌ Fehler beim Laden der Notiz:', response.status);
             showTempMessage('❌ Fehler beim Laden der Notiz', 'danger');
@@ -225,14 +219,16 @@ async function saveCurrentNote() {
         return;
     }
     
-    const textarea = document.getElementById('main-note-textarea');
-    if (!textarea) {
-        console.error('❌ Textarea nicht gefunden');
-        return;
+    // NEUE METHODE: Content aus Sidebar Editor holen (unterstützt beide Modi)
+    let updatedContent;
+    if (typeof getContentFromSidebarEditor === 'function') {
+        updatedContent = getContentFromSidebarEditor();
+    } else {
+        // Fallback zur alten Methode
+        const textarea = document.getElementById('main-note-textarea');
+        updatedContent = textarea ? textarea.value : '';
     }
     
-    // Daten aus UI holen
-    const updatedContent = textarea.value;
     const titleInput = document.getElementById('current-note-title-input');
     const updatedTitle = titleInput ? titleInput.value.trim() : currentNoteData.title;
     
@@ -263,37 +259,14 @@ async function saveCurrentNote() {
                 renderNotesDropdown();
             }
             
-            // WENIGER MESSAGES: Nur bei wichtigen Aktionen
-            // showTempMessage('✅ Notiz gespeichert', 'success');
-            
-            console.log('✅ Sidebar-Notiz gespeichert');
-            
-            // Modal aktualisieren
-            if (typeof loadNotes === 'function') {
-                setTimeout(() => {
-                    loadNotes();
-                }, 100);
-            }
-            
+            console.log('✅ Notiz gespeichert');
         } else {
-            const error = await response.json();
-            const errorMsg = error.error || 'Unbekannter Fehler';
-            
-            // Bei 404: Notiz existiert nicht mehr
-            if (response.status === 404) {
-                console.log('⚠️ Notiz existiert nicht mehr - zurücksetzen');
-                currentNoteId = null;
-                currentNoteData = null;
-                showEmptyNotesState();
-                showTempMessage('Notiz wurde bereits gelöscht', 'warning');
-                return;
-            }
-            
-            showTempMessage('Fehler beim Speichern: ' + errorMsg, 'danger');
+            console.error('❌ Fehler beim Speichern:', response.status);
+            showTempMessage('❌ Fehler beim Speichern der Notiz', 'danger');
         }
     } catch (error) {
         console.error('❌ Fehler beim Speichern:', error);
-        showTempMessage('Fehler beim Speichern: ' + error.message, 'danger');
+        showTempMessage('❌ Verbindungsfehler beim Speichern', 'danger');
     }
 }
 
@@ -414,32 +387,52 @@ function updateNoteDisplay() {
     if (!currentNoteData) return;
     
     // Titel bereinigen (HTML-Tags entfernen)
-    const cleanTitle = currentNoteData.title ? currentNoteData.title.replace(/<[^>]*>/g, '') : 'Unbenannte Notiz';
+    const cleanTitle = currentNoteData.title ? 
+        currentNoteData.title.replace(/<[^>]*>/g, '') : 'Unbenannte Notiz';
     
-    // Header aktualisieren
-    document.getElementById('current-note-name').textContent = cleanTitle;
+    console.log('🔄 Aktualisiere Note Display für:', cleanTitle);
     
-    // Titel anzeigen
+    // Header aktualisieren - MIT NULL-CHECK
+    const noteNameElement = document.getElementById('current-note-name');
+    if (noteNameElement) {
+        noteNameElement.textContent = cleanTitle;
+        console.log('✅ Header-Titel aktualisiert');
+    } else {
+        console.warn('⚠️ Element #current-note-name nicht gefunden');
+    }
+    
+    // Titel anzeigen - MIT NULL-CHECKS
     const titleDisplay = document.getElementById('current-note-title-display');
     const titleInput = document.getElementById('current-note-title-input');
     
     if (titleDisplay) {
         titleDisplay.textContent = cleanTitle;
-    }
-    if (titleInput) {
-        titleInput.value = cleanTitle;
+        console.log('✅ Titel-Display aktualisiert');
+    } else {
+        console.warn('⚠️ Element #current-note-title-display nicht gefunden');
     }
     
-    // WICHTIG: Content in Textarea laden
-    const textarea = document.getElementById('main-note-textarea');
-    if (textarea) {
-        // HTML-Tags entfernen für plain text editing
-        const cleanContent = currentNoteData.content ? currentNoteData.content.replace(/<[^>]*>/g, '') : '';
-        textarea.value = cleanContent;
-        
-        console.log('✅ Content in Textarea geladen:', cleanContent.length, 'Zeichen');
+    if (titleInput) {
+        titleInput.value = cleanTitle;
+        console.log('✅ Titel-Input aktualisiert');
     } else {
-        console.error('❌ Textarea #main-note-textarea nicht gefunden!');
+        console.warn('⚠️ Element #current-note-title-input nicht gefunden');
+    }
+    
+    // Content laden - NEUE METHODE
+    if (typeof loadContentInSidebarEditor === 'function') {
+        loadContentInSidebarEditor(currentNoteData.content);
+    } else {
+        // Fallback zur alten Methode
+        const textarea = document.getElementById('main-note-textarea');
+        if (textarea) {
+            const cleanContent = currentNoteData.content ? 
+                currentNoteData.content.replace(/<[^>]*>/g, '') : '';
+            textarea.value = cleanContent;
+            console.log('✅ Content in Textarea geladen:', cleanContent.length, 'Zeichen');
+        } else {
+            console.error('❌ Textarea #main-note-textarea nicht gefunden!');
+        }
     }
     
     // Status zurücksetzen
@@ -448,7 +441,10 @@ function updateNoteDisplay() {
     
     // Dropdown neu rendern für aktive Markierung
     renderNotesDropdown();
+    
+    console.log('✅ Note Display vollständig aktualisiert');
 }
+
 
 function showNoteEditor() {
     const noNote = document.getElementById('no-note-selected');
@@ -479,7 +475,13 @@ function showEmptyNotesState() {
         noNote.classList.add('d-flex');
     }
     
-    document.getElementById('current-note-name').textContent = 'Keine Notiz ausgewählt';
+    // MIT NULL-CHECK
+    const noteNameElement = document.getElementById('current-note-name');
+    if (noteNameElement) {
+        noteNameElement.textContent = 'Keine Notiz ausgewählt';
+    } else {
+        console.warn('⚠️ Element #current-note-name nicht gefunden');
+    }
 }
 
 function renderNotesDropdown() {
@@ -603,19 +605,22 @@ function initializeSidebarNotes() {
         console.error('❌ Kein data-project-slug gefunden!');
     }
     
-    // Auto-Save für Notiz-Änderungen
+    // Auto-Save für Notiz-Änderungen (nur für Plain-Text-Modus)
     const textarea = document.getElementById('main-note-textarea');
     if (textarea) {
+        // Fallback für Plain-Text-Modus (Summernote hat eigene Callbacks)
         textarea.addEventListener('input', function() {
-            noteHasUnsavedChanges = true;
-            updateNoteSaveStatus('Ungespeichert');
-            
-            // Auto-Save nach 3 Sekunden
-            if (noteAutoSaveEnabled) {
-                clearTimeout(window.noteAutoSaveTimer);
-                window.noteAutoSaveTimer = setTimeout(() => {
-                    saveCurrentNote();
-                }, 3000);
+            // Nur triggern wenn NICHT im Rich-Text-Modus
+            if (typeof sidebarRichTextEnabled === 'undefined' || !sidebarRichTextEnabled) {
+                noteHasUnsavedChanges = true;
+                updateNoteSaveStatus('Ungespeichert');
+                
+                if (noteAutoSaveEnabled) {
+                    clearTimeout(window.noteAutoSaveTimer);
+                    window.noteAutoSaveTimer = setTimeout(() => {
+                        saveCurrentNote();
+                    }, 3000);
+                }
             }
         });
     }
@@ -629,6 +634,13 @@ function initializeSidebarNotes() {
             }
         });
     }
+    
+    // Optional: Summernote nach dem Laden aktivieren
+    // setTimeout(() => {
+    //     if (typeof initializeSidebarSummernote === 'function') {
+    //         initializeSidebarSummernote();
+    //     }
+    // }, 1000);
     
     // Notizen laden
     if (sidebarProjectSlug) {
@@ -692,7 +704,6 @@ async function editNoteInModal(noteId) {
                             </div>
                             
                             <div class="flex-fill d-flex flex-column">
-                                
                                 <textarea id="modal-note-content" 
                                           class="form-control flex-fill" 
                                           style="min-height: 400px; resize: vertical;" 
