@@ -1,302 +1,259 @@
 // ====================================================
-// WORKSPACE.JS - VOLLSTÄNDIGE EDITOR & WORKSPACE LOGIC
+// WORKSPACE.JS - API ROUTE FIX + AUTO-SAVE COLORS
 // ====================================================
 
-console.log('🚀 Workspace.js wird geladen...');
+console.log('📝 Workspace.js wird geladen...');
 
 // Globale Variablen
-let projectSlug = null;
-let documentId = null;
-let autoSaveEnabled = true;
+let editor = null;
 let hasUnsavedChanges = false;
+let autoSaveEnabled = true;
+let autoSaveTimer = null;
+let projectSlug = null;
+let wordCountUpdateTimer = null;
 
 // ====================================================
-// SUMMERNOTE EDITOR SETUP
+// EDITOR INITIALISIERUNG
 // ====================================================
 
 function initializeSummernoteEditor() {
-    console.log('🟡 initializeSummernoteEditor() gestartet');
+    console.log('🔧 Initialisiere Summernote Editor...');
     
-    // Warten bis DOM und jQuery bereit sind
-    if (typeof $ === 'undefined') {
-        console.error('❌ jQuery ist nicht verfügbar!');
-        return;
-    }
-    
-    // Warten bis Summernote geladen ist
-    if (typeof $.fn.summernote === 'undefined') {
-        console.error('❌ Summernote ist nicht verfügbar!');
-        setTimeout(initializeSummernoteEditor, 100);
-        return;
-    }
-    
-    console.log('✅ jQuery und Summernote verfügbar');
-    
-    // Projekt-Daten aus HTML extrahieren
-    const mainElement = document.querySelector('[data-project-slug]');
-    if (mainElement) {
-        projectSlug = mainElement.dataset.projectSlug;
+    // Project Slug extrahieren
+    const workspaceElement = document.querySelector('[data-project-slug]');
+    if (workspaceElement) {
+        projectSlug = workspaceElement.dataset.projectSlug;
         console.log('📊 Project Slug gefunden:', projectSlug);
     } else {
-        console.error('❌ Kein data-project-slug Element gefunden!');
-    }
-
-    const editorElement = $('#summernote-editor');
-    if (editorElement.length === 0) {
-        console.error('❌ #summernote-editor Element nicht gefunden!');
-        return;
+        console.error('❌ Kein data-project-slug gefunden!');
     }
     
-    console.log('✅ Editor Element gefunden, initialisiere Summernote...');
-
+    // Auto-Save Button initial korrekt setzen
+    updateAutoSaveButtonColors();
+    
     // Summernote initialisieren
-    editorElement.summernote({
+    $('#summernote-editor').summernote({
         height: 500,
-        focus: true,
-        
+        minHeight: 400,
+        maxHeight: 800,
+        placeholder: 'Beginne hier zu schreiben...',
+        lang: 'de-DE',
         toolbar: [
-            ['heading', ['p', 'h1', 'h2', 'h3', 'h4']],
-            ['font', ['bold', 'italic', 'underline', 'strikethrough']],
-            ['para', ['paragraph', 'ul', 'ol']],
-            ['color', ['color']],
-            ['insert', ['link', 'picture', 'table', 'hr']],
-            ['view', ['fullscreen', 'codeview']]
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'clear']],
+            ['fontname', ['fontname']],
+            ['fontsize', ['fontsize']],
+            ['color', ['forecolor', 'backcolor']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture', 'video']],
+            ['view', ['fullscreen', 'codeview', 'help']]
         ],
-        
-        buttons: {
-            p: function(context) {
-                var ui = $.summernote.ui;
-                return ui.button({
-                    contents: 'P',
-                    tooltip: 'Normal Text',
-                    click: function() {
-                        context.invoke('formatBlock', 'p');
-                    }
-                }).render();
-            },
-            h1: function(context) {
-                var ui = $.summernote.ui;
-                return ui.button({
-                    contents: 'H1',
-                    tooltip: 'Überschrift 1',
-                    click: function() {
-                        context.invoke('formatBlock', 'h1');
-                    }
-                }).render();
-            },
-            h2: function(context) {
-                var ui = $.summernote.ui;
-                return ui.button({
-                    contents: 'H2',
-                    tooltip: 'Überschrift 2',
-                    click: function() {
-                        context.invoke('formatBlock', 'h2');
-                    }
-                }).render();
-            },
-            h3: function(context) {
-                var ui = $.summernote.ui;
-                return ui.button({
-                    contents: 'H3',
-                    tooltip: 'Überschrift 3',
-                    click: function() {
-                        context.invoke('formatBlock', 'h3');
-                    }
-                }).render();
-            },
-            h4: function(context) {
-                var ui = $.summernote.ui;
-                return ui.button({
-                    contents: 'H4',
-                    tooltip: 'Überschrift 4',
-                    click: function() {
-                        context.invoke('formatBlock', 'h4');
-                    }
-                }).render();
-            }
-        },
-
-        fontNames: [
-            'Arial', 'Georgia', 'Times New Roman', 'Helvetica', 'Verdana'
-        ],
-        
-        colors: [
-            ['#000000', '#424242', '#636363', '#9C9C94', '#CEC6CE', '#EFEFEF', '#F7F3F7', '#FFFFFF'],
-            ['#FF0000', '#FF9C00', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#9C00FF', '#FF00FF'],
-            ['#F7C6CE', '#FFE7CE', '#FFEAA7', '#D1F2A5', '#AEDFF7', '#A29BFE', '#DDA0DD', '#F8BBD0']
-        ],
-        
         callbacks: {
-            onInit: function() {
-                console.log('🎉 Summernote Editor erfolgreich initialisiert!');
-                updateWordCount(editorElement.summernote('code'));
-            },
             onChange: function(contents, $editable) {
-                console.log('📝 Content geändert, Länge:', contents.length);
-                hasUnsavedChanges = true;
-                updateWordCount(contents);
-                
-                // Auto-Save nach 3 Sekunden Inaktivität
-                if (autoSaveEnabled) {
-                    clearTimeout(window.autoSaveTimer);
-                    window.autoSaveTimer = setTimeout(function() {
-                        saveContent(false);
-                    }, 3000);
-                }
+                handleContentChange(contents);
             },
-            onError: function(error) {
-                console.error('❌ Summernote Fehler:', error);
+            onInit: function() {
+                console.log('✅ Summernote Editor initialisiert');
+                // Erste Wort-Zählung
+                updateWordCount();
             }
         }
     });
+    
+    // Editor-Referenz speichern
+    editor = $('#summernote-editor');
+    
+    console.log('✅ Editor initialisiert');
 }
 
 // ====================================================
-// EDITOR FUNKTIONEN
+// CONTENT CHANGE HANDLING
 // ====================================================
 
-function updateWordCount(content) {
-    try {
-        const text = $(content).text();
-        const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
-        const charCount = text.length;
-        
-        $('#word-count-number').text(wordCount);
-        
-        console.log('📊 Word Count Update: Wörter=', wordCount, 'Zeichen=', charCount);
-    } catch (error) {
-        console.error('❌ Fehler beim Word Count:', error);
+function handleContentChange(contents) {
+    hasUnsavedChanges = true;
+    updateSaveStatus('Ungespeichert');
+    
+    // Wort-Zählung mit Debounce
+    if (wordCountUpdateTimer) {
+        clearTimeout(wordCountUpdateTimer);
+    }
+    wordCountUpdateTimer = setTimeout(() => {
+        updateWordCount();
+    }, 500);
+    
+    // Auto-Save
+    if (autoSaveEnabled) {
+        if (autoSaveTimer) {
+            clearTimeout(autoSaveTimer);
+        }
+        autoSaveTimer = setTimeout(() => {
+            saveNow();
+        }, 3000); // Auto-Save nach 3 Sekunden
     }
 }
 
-function saveContent(isManual = true) {
-    if (!projectSlug) {
-        console.error('❌ Keine Projekt-Slug zum Speichern!');
+// ====================================================
+// SPEICHER-FUNKTIONEN (API-FIX!)
+// ====================================================
+
+async function saveNow() {
+    if (!editor || !projectSlug) {
+        console.error('❌ Editor oder Project Slug nicht verfügbar');
         return;
     }
     
-    const content = $('#summernote-editor').summernote('code');
-    console.log('💾 Speichere Content für Projekt:', projectSlug, 'Länge:', content.length);
+    const content = editor.summernote('code');
+    console.log('💾 Speichere Dokument...', content.length, 'Zeichen');
     
-    fetch('/api/textdocument/save', {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify({
-            project_slug: projectSlug,
-            content: content
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
+    try {
+        // BEHOBEN: Richtige API-Route verwenden!
+        const response = await fetch('/api/textdocument/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                content: content,
+                project_slug: projectSlug  // Project Slug mitschicken
+            })
+        });
+        
+        if (response.ok) {
             hasUnsavedChanges = false;
-            const now = new Date().toLocaleTimeString();
-            
-            if ($('#save-status').length > 0) {
-                $('#save-status').html(`<i class="fas fa-check text-success"></i> Gespeichert um ${now}`);
-            }
-            
-            if (isManual) {
-                showTempMessage('✅ Erfolgreich gespeichert!', 'success');
-            }
-            
-            console.log('✅ Content erfolgreich gespeichert!');
+            updateSaveStatus('Gespeichert');
+            showTempMessage('✅ Dokument gespeichert', 'success');
+            console.log('✅ Dokument erfolgreich gespeichert');
         } else {
-            console.error('❌ Speichern fehlgeschlagen:', data);
-            showTempMessage('❌ Fehler beim Speichern!', 'danger');
+            const error = await response.json();
+            showTempMessage('❌ Fehler beim Speichern: ' + (error.error || 'Unbekannter Fehler'), 'danger');
+            console.error('❌ Speicher-Fehler:', error);
         }
-    })
-    .catch(error => {
-        console.error('❌ Speicher-Fehler:', error);
-        showTempMessage('❌ Verbindungsfehler beim Speichern!', 'danger');
-    });
-}
-
-// ====================================================
-// TOOLBAR FUNKTIONEN (AUS MAIN.JS)
-// ====================================================
-
-function saveNow() {
-    console.log('💾 Manuelles Speichern ausgelöst');
-    saveContent(true); // true = manueller Save
-}
-
-function showWordCount() {
-    const content = $('#summernote-editor').summernote('code');
-    const text = $(content).text();
-    const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
-    const charCount = text.length;
-    
-    showTempMessage(`📊 Statistik: ${wordCount} Wörter, ${charCount} Zeichen`, 'info');
+    } catch (error) {
+        console.error('❌ Fehler beim Speichern:', error);
+        showTempMessage('❌ Verbindungsfehler beim Speichern', 'danger');
+    }
 }
 
 function toggleAutoSave() {
     autoSaveEnabled = !autoSaveEnabled;
-    const status = autoSaveEnabled ? 'Ein' : 'Aus';
     
-    $('#autosave-status').text(`Auto-Save: ${status}`);
+    // Button-Farben und Text aktualisieren
+    updateAutoSaveButtonColors();
     
-    showTempMessage(`🤖 Auto-Save ${autoSaveEnabled ? 'aktiviert' : 'deaktiviert'}`, 'info');
+    const message = autoSaveEnabled ? '✅ Auto-Save aktiviert' : '⚠️ Auto-Save deaktiviert';
+    showTempMessage(message, autoSaveEnabled ? 'success' : 'warning');
     
-    console.log('🔄 Auto-Save Status:', autoSaveEnabled);
+    console.log('🤖 Auto-Save:', autoSaveEnabled ? 'aktiviert' : 'deaktiviert');
 }
 
-function saveAsNote() {
-    if (!projectSlug) {
-        showTempMessage('Keine Projekt-Slug gefunden', 'warning');
-        return;
-    }
+// ====================================================
+// UI UPDATE FUNKTIONEN
+// ====================================================
+
+function updateAutoSaveButtonColors() {
+    const autoSaveButton = document.querySelector('button[onclick="toggleAutoSave()"]');
+    const statusElement = document.getElementById('autosave-status');
     
-    // Content aus Editor holen
-    const content = $('#summernote-editor').summernote('code');
-    const text = $(content).text();
-    
-    if (!text.trim()) {
-        showTempMessage('Editor ist leer - nichts zu speichern', 'warning');
-        return;
-    }
-    
-    // Titel aus ersten Worten generieren (max 50 Zeichen)
-    const firstLine = text.trim().split('\n')[0];
-    const title = firstLine.length > 50 ? firstLine.substring(0, 47) + '...' : firstLine;
-    
-    console.log('📝 Speichere Editor-Inhalt als Notiz:', title);
-    
-    fetch('/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            title: title,
-            content: content,
-            project_slug: projectSlug
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success || data.id) {
-            showTempMessage('✅ Als Notiz gespeichert: ' + title, 'success');
-            console.log('✅ Notiz erstellt mit ID:', data.id);
-            
-            // Notes-Manager informieren (falls verfügbar)
-            if (typeof window.loadNotes === 'function') {
-                setTimeout(() => {
-                    window.loadNotes();
-                }, 300);
-            }
-            
+    if (autoSaveButton && statusElement) {
+        if (autoSaveEnabled) {
+            // Auto-Save AN -> Primary (blau)
+            autoSaveButton.className = 'btn btn-primary btn-sm';
+            statusElement.textContent = 'Auto-Save: Ein';
         } else {
-            showTempMessage('❌ Fehler beim Speichern: ' + (data.error || 'Unbekannter Fehler'), 'danger');
+            // Auto-Save AUS -> Warning (orange/gelb)
+            autoSaveButton.className = 'btn btn-warning btn-sm';
+            statusElement.textContent = 'Auto-Save: Aus';
         }
-    })
-    .catch(error => {
-        console.error('❌ Fehler beim Speichern als Notiz:', error);
-        showTempMessage('❌ Verbindungsfehler beim Speichern', 'danger');
-    });
+    }
 }
 
+function updateSaveStatus(status) {
+    const saveTimeElement = document.getElementById('editor-save-time');
+    if (saveTimeElement) {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('de-DE', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+        if (status === 'Gespeichert') {
+            saveTimeElement.textContent = `Gespeichert um ${timeString}`;
+            saveTimeElement.className = 'text-success';
+        } else {
+            saveTimeElement.textContent = status;
+            saveTimeElement.className = 'text-warning';
+        }
+    }
+}
 
+function updateWordCount() {
+    if (!editor) return;
+    
+    const content = editor.summernote('code');
+    const textContent = content.replace(/<[^>]*>/g, ''); // HTML-Tags entfernen
+    const wordCount = textContent.trim() === '' ? 0 : textContent.trim().split(/\s+/).length;
+    
+    const wordCountElement = document.getElementById('word-count-number');
+    if (wordCountElement) {
+        wordCountElement.textContent = wordCount.toLocaleString('de-DE');
+    }
+}
+
+function showWordCount() {
+    updateWordCount();
+    const wordCountElement = document.getElementById('word-count-number');
+    if (wordCountElement) {
+        const count = wordCountElement.textContent;
+        showTempMessage(`📊 Aktuell: ${count} Wörter`, 'info');
+    }
+}
+
+// ====================================================
+// HILFSFUNKTIONEN
+// ====================================================
+
+function showTempMessage(message, type = 'info') {
+    // Prüfen ob bereits eine Nachricht existiert
+    let alertContainer = document.getElementById('temp-alert-container');
+    
+    if (!alertContainer) {
+        alertContainer = document.createElement('div');
+        alertContainer.id = 'temp-alert-container';
+        alertContainer.style.position = 'fixed';
+        alertContainer.style.top = '20px';
+        alertContainer.style.right = '20px';
+        alertContainer.style.zIndex = '9999';
+        alertContainer.style.minWidth = '300px';
+        document.body.appendChild(alertContainer);
+    }
+    
+    // Neue Alert erstellen
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    alertContainer.appendChild(alertDiv);
+    
+    // Auto-Hide nach 3 Sekunden
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.classList.remove('show');
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 150);
+        }
+    }, 3000);
+}
+
+function openNotesModal() {
+    const notesModal = new bootstrap.Modal(document.getElementById('notesModal'));
+    notesModal.show();
+}
 
 // ====================================================
 // GLOBALE FUNKTIONEN VERFÜGBAR MACHEN
@@ -305,9 +262,8 @@ function saveAsNote() {
 window.saveNow = saveNow;
 window.showWordCount = showWordCount;
 window.toggleAutoSave = toggleAutoSave;
-window.saveAsNote = saveAsNote;
+window.openNotesModal = openNotesModal;
 window.initializeSummernoteEditor = initializeSummernoteEditor;
-
 
 // ====================================================
 // INITIALIZATION

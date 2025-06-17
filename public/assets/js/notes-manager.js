@@ -1,5 +1,5 @@
 // ====================================================
-// NOTIZEN-MANAGER.JS - MODAL + SIDEBAR (VOLLSTÄNDIG)
+// NOTIZEN-MANAGER.JS - ORIGINAL CARD DESIGN + API FIXES
 // ====================================================
 
 console.log('📋 Notes-Manager.js wird geladen...');
@@ -49,11 +49,13 @@ async function loadNotes() {
     const notesContent = document.getElementById('notes-content');
     if (notesContent) {
         notesContent.innerHTML = `
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Lade Notizen...</span>
+            <div class="row g-3" id="items-grid">
+                <div class="col-12 text-center text-muted py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Lade Notizen...</span>
+                    </div>
+                    <p class="text-muted mt-2">Notizen werden geladen...</p>
                 </div>
-                <p class="text-muted mt-2">Notizen werden geladen...</p>
             </div>
         `;
     }
@@ -81,7 +83,7 @@ async function loadNotes() {
             allNotes = await response.json();
             console.log('✅ Notizen geladen:', allNotes.length, 'Stück');
             
-            // Notizen im Modal anzeigen
+            // Notizen im Modal anzeigen (ORIGINAL CARD DESIGN)
             renderNotesInModal();
             
             // Sidebar informieren (falls vorhanden)
@@ -100,7 +102,7 @@ async function loadNotes() {
 }
 
 // ====================================================
-// MODAL RENDERING
+// MODAL RENDERING (EINFACHE LISTEN-ANSICHT)
 // ====================================================
 
 function renderNotesInModal() {
@@ -118,33 +120,25 @@ function renderNotesInModal() {
         return;
     }
     
-    let html = '<div class="row">';
+    // EINFACHE LISTE (Original Design)
+    let html = '<div class="list-group">';
     
     allNotes.forEach(note => {
         const cleanTitle = note.title ? note.title.replace(/<[^>]*>/g, '') : 'Unbenannte Notiz';
-        const truncatedTitle = cleanTitle.length > 25 ? cleanTitle.substring(0, 22) + '...' : cleanTitle;
         
         html += `
-            <div class="col-md-3 col-sm-4 col-6 mb-3">
-                <div class="text-center position-relative">
-                    <!-- Löschen Button (oben rechts) -->
-                    <button class="btn btn-outline-danger btn-sm position-absolute" 
-                            style="top: -8px; right: 8px; z-index: 10; width: 24px; height: 24px; padding: 0;" 
-                            onclick="deleteNoteFromModal(${note.id}); event.stopPropagation();"
-                            title="Notiz löschen">
-                        <i class="fas fa-times" style="font-size: 10px;"></i>
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1">${escapeHtml(cleanTitle)}</h6>
+                    <small class="text-muted">${formatDate(note.updated_at || note.created_at)}</small>
+                </div>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary btn-sm" onclick="editNoteInModal(${note.id})">
+                        <i class="fas fa-edit"></i>
                     </button>
-                    
-                    <!-- Klickbarer Notiz-Bereich -->
-                    <div class="note-item p-3 border rounded bg-light h-100 d-flex flex-column justify-content-center" 
-                         style="cursor: pointer; min-height: 100px; transition: all 0.2s;"
-                         onclick="editNoteInModal(${note.id})"
-                         onmouseover="this.style.backgroundColor='#e9ecef'; this.style.transform='translateY(-2px)'"
-                         onmouseout="this.style.backgroundColor='#f8f9fa'; this.style.transform='translateY(0)'">
-                        
-                        <i class="fas fa-sticky-note fa-2x text-primary mb-2"></i>
-                        <small class="text-dark fw-bold">${escapeHtml(truncatedTitle)}</small>
-                    </div>
+                    <button class="btn btn-outline-danger btn-sm" onclick="deleteNoteFromModal(${note.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
             </div>
         `;
@@ -158,246 +152,99 @@ function showNotesError(message) {
     const notesContent = document.getElementById('notes-content');
     if (notesContent) {
         notesContent.innerHTML = `
-            <div class="text-center py-5">
-                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
-                <h5 class="text-danger">Fehler beim Laden</h5>
-                <p class="text-muted">${message}</p>
-                <button class="btn btn-primary" onclick="loadNotes()">
-                    <i class="fas fa-redo"></i> Erneut versuchen
-                </button>
-            </div>
-        `;
-    }
-}
-
-// ====================================================
-// MODAL AKTIONEN
-// ====================================================
-
-// Diese Funktion wird nicht mehr benötigt - direktes Bearbeiten via editNoteInModal
-
-function editNoteInModal(noteId) {
-    const note = allNotes.find(n => n.id === noteId);
-    if (!note) return;
-    
-    console.log('✏️ Bearbeite Notiz im Modal:', note.title);
-    
-    // Modal höher machen für Editor
-    const modalDialog = document.querySelector('#notesModal .modal-dialog');
-    if (modalDialog) {
-        modalDialog.style.maxHeight = '95vh'; // 95% der Bildschirmhöhe
-        modalDialog.style.height = '95vh';
-    }
-    
-    const modalContent = document.querySelector('#notesModal .modal-content');
-    if (modalContent) {
-        modalContent.style.height = '100%';
-    }
-    
-    const modalBody = document.querySelector('#notesModal .modal-body');
-    if (modalBody) {
-        modalBody.style.height = 'calc(95vh - 120px)'; // Abzüglich Header
-        modalBody.style.overflowY = 'auto';
-    }
-    
-    // Modal-Content zu Bearbeitungsansicht umschalten
-    const notesContent = document.getElementById('notes-content');
-    if (notesContent) {
-        notesContent.innerHTML = `
-            <div class="container-fluid h-100">
-                <div class="row h-100">
-                    <div class="col-12 h-100 d-flex flex-column">
-                        <!-- Zurück Button -->
-                        <button class="btn btn-outline-secondary btn-sm mb-3 align-self-start" onclick="loadNotes()">
-                            <i class="fas fa-arrow-left me-1"></i> Zurück zur Übersicht
-                        </button>
-                        
-                        <!-- Notiz Editor -->
-                        <div class="card flex-grow-1 d-flex flex-column">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-edit me-2"></i>Notiz bearbeiten
-                                </h6>
-                                <button class="btn btn-outline-danger btn-sm" onclick="deleteNoteFromModalEditor(${note.id})">
-                                    <i class="fas fa-trash me-1"></i> Löschen
-                                </button>
-                            </div>
-                            <div class="card-body d-flex flex-column p-3">
-                                <!-- Titel -->
-                                <div class="mb-3">
-                                    <label for="modal-note-title" class="form-label">Titel:</label>
-                                    <input type="text" class="form-control" id="modal-note-title" 
-                                           value="${escapeHtml(note.title || '')}" placeholder="Notiz-Titel">
-                                </div>
-                                
-                                <!-- Inhalt -->
-                                <div class="flex-grow-1 d-flex flex-column">
-                                    <label for="modal-note-content" class="form-label">Inhalt:</label>
-                                    <textarea class="form-control flex-grow-1" id="modal-note-content" 
-                                              style="min-height: 400px; resize: vertical;" 
-                                              placeholder="Schreibe hier deine Notiz...">${escapeHtml(note.content || '')}</textarea>
-                                </div>
-                                
-                                <!-- Speichern Button -->
-                                <div class="d-flex justify-content-end mt-3">
-                                    <button class="btn btn-success" onclick="saveNoteFromModalEditor(${note.id})">
-                                        <i class="fas fa-save me-1"></i> Speichern
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="row g-3">
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <h5 class="text-muted">Fehler beim Laden</h5>
+                    <p class="text-muted">${escapeHtml(message)}</p>
+                    <button class="btn btn-outline-primary" onclick="loadNotes()">
+                        <i class="fas fa-redo"></i> Erneut versuchen
+                    </button>
                 </div>
             </div>
         `;
     }
 }
 
-async function saveNoteFromModalEditor(noteId) {
-    const title = document.getElementById('modal-note-title').value.trim();
-    const content = document.getElementById('modal-note-content').value;
-    
-    if (!title) {
-        showTempMessage('Titel ist erforderlich', 'warning');
-        return;
-    }
-    
-    try {
-        console.log('💾 Speichere Notiz aus Modal-Editor:', title);
-        
-        const response = await fetch(`/api/notes/${noteId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: title,
-                content: content
-            })
-        });
-        
-        if (response.ok) {
-            const updatedNote = await response.json();
-            
-            // Notiz in allNotes aktualisieren
-            const noteIndex = allNotes.findIndex(n => n.id === noteId);
-            if (noteIndex !== -1) {
-                allNotes[noteIndex] = updatedNote;
-            }
-            
-            showTempMessage('✅ Notiz gespeichert!', 'success');
-            
-            // Sidebar informieren (falls verfügbar)
-            if (typeof window.updateSidebarFromManager === 'function') {
-                window.updateSidebarFromManager(allNotes);
-            }
-            
-            // Zurück zur Übersicht
-            setTimeout(() => {
-                loadNotes();
-            }, 500);
-            
-        } else {
-            const error = await response.json();
-            showTempMessage('Fehler beim Speichern: ' + (error.error || 'Unbekannter Fehler'), 'danger');
-        }
-    } catch (error) {
-        console.error('❌ Fehler beim Speichern:', error);
-        showTempMessage('Fehler beim Speichern: ' + error.message, 'danger');
-    }
-}
-
-async function deleteNoteFromModalEditor(noteId) {
-    const note = allNotes.find(n => n.id === noteId);
-    if (!note) return;
-    
-    if (!confirm(`Notiz "${note.title}" wirklich löschen?`)) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/notes/${noteId}`, {
-            method: 'DELETE'
-        });
-        
-        if (response.ok) {
-            // Notiz aus lokaler Liste entfernen
-            allNotes = allNotes.filter(n => n.id !== noteId);
-            
-            showTempMessage(`✅ Notiz "${note.title}" gelöscht`, 'success');
-            
-            // Sidebar informieren
-            if (typeof window.updateSidebarFromManager === 'function') {
-                window.updateSidebarFromManager(allNotes);
-            }
-            
-            // Zurück zur Übersicht
-            setTimeout(() => {
-                loadNotes();
-            }, 300);
-            
-        } else {
-            showTempMessage('❌ Fehler beim Löschen', 'danger');
-        }
-    } catch (error) {
-        console.error('❌ Fehler beim Löschen:', error);
-        showTempMessage('❌ Verbindungsfehler beim Löschen', 'danger');
-    }
-}
-
 // ====================================================
-// SIDEBAR-FUNKTIONEN
+// SIDEBAR-FUNKTIONEN (WENIGER FRONTEND-MESSAGES)
 // ====================================================
 
 /**
- * Notiz in Sidebar laden (UMBENANNT!)
+ * Notiz in Sidebar laden UND Inhalt anzeigen (WENIGER MESSAGES)
  */
 async function loadNoteInSidebar(noteId) {
-    console.log('📖 Lade Notiz in Sidebar:', noteId);
+    console.log('📝 Lade Notiz in Sidebar:', noteId);
+    
+    if (!noteId) {
+        console.error('❌ Keine Notiz-ID übergeben');
+        return;
+    }
     
     try {
-        const response = await fetch('/api/notes/' + noteId);
+        // API-Call für spezifische Notiz
+        const response = await fetch(`/api/notes/${noteId}`);
+        
         if (response.ok) {
             currentNoteData = await response.json();
             currentNoteId = noteId;
             
-            console.log('✅ Notiz in Sidebar geladen:', currentNoteData.title);
+            console.log('✅ Notiz geladen:', currentNoteData.title);
+            console.log('📄 Content Länge:', currentNoteData.content ? currentNoteData.content.length : 0);
             
             // UI aktualisieren
             updateNoteDisplay();
             showNoteEditor();
             
+            // ENTFERNT: showTempMessage('✅ Notiz geladen: ' + currentNoteData.title, 'success');
+            
+        } else if (response.status === 404) {
+            console.log('⚠️ Notiz nicht gefunden - aus Liste entfernen');
+            
+            // Notiz aus Sidebar-Liste entfernen
+            sidebarNotes = sidebarNotes.filter(note => note.id !== noteId);
+            renderNotesDropdown();
+            showEmptyNotesState();
+            
+            showTempMessage('⚠️ Notiz wurde gelöscht', 'warning');
+            
         } else {
             console.error('❌ Fehler beim Laden der Notiz:', response.status);
-            showTempMessage('Fehler beim Laden der Notiz', 'danger');
+            showTempMessage('❌ Fehler beim Laden der Notiz', 'danger');
         }
+        
     } catch (error) {
         console.error('❌ Fehler beim Laden der Notiz:', error);
-        showTempMessage('Fehler beim Laden der Notiz: ' + error.message, 'danger');
+        showTempMessage('❌ Verbindungsfehler: ' + error.message, 'danger');
     }
 }
 
 async function saveCurrentNote() {
     if (!currentNoteId || !currentNoteData) {
-        showTempMessage('Keine Notiz zum Speichern ausgewählt', 'warning');
+        showTempMessage('❌ Keine Notiz zum Speichern ausgewählt', 'warning');
         return;
     }
     
-    const title = document.getElementById('current-note-title-input').value.trim();
-    const content = document.getElementById('main-note-textarea').value;
-    
-    if (!title) {
-        showTempMessage('Titel ist erforderlich', 'warning');
+    const textarea = document.getElementById('main-note-textarea');
+    if (!textarea) {
+        console.error('❌ Textarea nicht gefunden');
         return;
     }
+    
+    // Daten aus UI holen
+    const updatedContent = textarea.value;
+    const titleInput = document.getElementById('current-note-title-input');
+    const updatedTitle = titleInput ? titleInput.value.trim() : currentNoteData.title;
+    
+    console.log('💾 Speichere Sidebar-Notiz:', currentNoteId);
     
     try {
-        console.log('💾 Speichere Sidebar-Notiz:', title);
-        
         const response = await fetch(`/api/notes/${currentNoteId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                title: title,
-                content: content
+                title: updatedTitle || 'Unbenannte Notiz',
+                content: updatedContent
             })
         });
         
@@ -406,22 +253,18 @@ async function saveCurrentNote() {
             
             // Lokale Daten aktualisieren
             currentNoteData = updatedNote;
-            
-            // Notiz in der Liste aktualisieren
-            const noteIndex = sidebarNotes.findIndex(n => n.id === currentNoteId);
-            if (noteIndex !== -1) {
-                sidebarNotes[noteIndex] = updatedNote;
-            }
-            
-            // UI aktualisieren
-            document.getElementById('current-note-name').textContent = title;
-            document.getElementById('current-note-title-display').textContent = title;
-            
             noteHasUnsavedChanges = false;
             updateNoteSaveStatus('Gespeichert');
             
-            renderNotesDropdown();
-            showTempMessage('✅ Notiz gespeichert!', 'success');
+            // Sidebar-Liste aktualisieren
+            const noteIndex = sidebarNotes.findIndex(note => note.id === currentNoteId);
+            if (noteIndex !== -1) {
+                sidebarNotes[noteIndex] = updatedNote;
+                renderNotesDropdown();
+            }
+            
+            // WENIGER MESSAGES: Nur bei wichtigen Aktionen
+            // showTempMessage('✅ Notiz gespeichert', 'success');
             
             console.log('✅ Sidebar-Notiz gespeichert');
             
@@ -564,6 +407,9 @@ async function deleteCurrentNote() {
     }
 }
 
+/**
+ * UI-Display mit korrektem Content Loading
+ */
 function updateNoteDisplay() {
     if (!currentNoteData) return;
     
@@ -574,13 +420,26 @@ function updateNoteDisplay() {
     document.getElementById('current-note-name').textContent = cleanTitle;
     
     // Titel anzeigen
-    document.getElementById('current-note-title-display').textContent = cleanTitle;
-    document.getElementById('current-note-title-input').value = cleanTitle;
+    const titleDisplay = document.getElementById('current-note-title-display');
+    const titleInput = document.getElementById('current-note-title-input');
     
-    // Content in Textarea laden
+    if (titleDisplay) {
+        titleDisplay.textContent = cleanTitle;
+    }
+    if (titleInput) {
+        titleInput.value = cleanTitle;
+    }
+    
+    // WICHTIG: Content in Textarea laden
     const textarea = document.getElementById('main-note-textarea');
     if (textarea) {
-        textarea.value = currentNoteData.content || '';
+        // HTML-Tags entfernen für plain text editing
+        const cleanContent = currentNoteData.content ? currentNoteData.content.replace(/<[^>]*>/g, '') : '';
+        textarea.value = cleanContent;
+        
+        console.log('✅ Content in Textarea geladen:', cleanContent.length, 'Zeichen');
+    } else {
+        console.error('❌ Textarea #main-note-textarea nicht gefunden!');
     }
     
     // Status zurücksetzen
@@ -702,22 +561,6 @@ function updateNoteSaveStatus(status) {
 async function loadSidebarNotes() {
     console.log('📋 Lade Sidebar-Notizen...');
     
-    // Warte auf notes-manager allNotes
-    if (typeof allNotes !== 'undefined' && allNotes.length > 0) {
-        sidebarNotes = allNotes;
-        console.log('✅ Sidebar nutzt geladene Notizen:', sidebarNotes.length);
-        renderNotesDropdown();
-        
-        // Erste Notiz automatisch laden
-        if (sidebarNotes.length > 0) {
-            await loadNoteInSidebar(sidebarNotes[0].id);
-        }
-        return;
-    }
-    
-    // Fallback: eigener API-Call
-    console.log('⚠️ Fallback: Eigener API-Call für Sidebar...');
-    
     if (!sidebarProjectSlug) {
         console.error('❌ Keine Projekt-Slug für Sidebar-Notizen');
         return;
@@ -798,36 +641,129 @@ function initializeSidebarNotes() {
 }
 
 // ====================================================
-// MODAL EVENT LISTENERS
+// MODAL FUNCTIONS (ORIGINAL EDITOR)
 // ====================================================
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('📋 Notes-Manager DOM ready');
+async function editNoteInModal(noteId) {
+    const note = allNotes.find(n => n.id === noteId);
+    if (!note) return;
     
-    // Modal Event-Listener
-    const notesModal = document.getElementById('notesModal');
-    if (notesModal) {
-        notesModal.addEventListener('show.bs.modal', function() {
-            console.log('📋 Notizen-Modal wird geöffnet - lade Notizen');
-            setTimeout(() => {
-                loadNotes();
-            }, 100);
-        });
-        
-        console.log('✅ Notes-Manager Modal Events registriert');
+    console.log('✏️ Bearbeite Notiz im Modal:', note.title);
+    
+    // Modal höher machen für Editor
+    const modalDialog = document.querySelector('#notesModal .modal-dialog');
+    if (modalDialog) {
+        modalDialog.style.maxHeight = '95vh';
+        modalDialog.style.height = '95vh';
     }
     
-    // Sidebar initialisieren
-    setTimeout(() => {
-        initializeSidebarNotes();
-    }, 200);
+    const modalContent = document.querySelector('#notesModal .modal-content');
+    if (modalContent) {
+        modalContent.style.height = '100%';
+    }
     
-    console.log('✅ Notes-Manager bereit');
-});
+    const modalBody = document.querySelector('#notesModal .modal-body');
+    if (modalBody) {
+        modalBody.style.height = 'calc(95vh - 120px)';
+        modalBody.style.overflowY = 'auto';
+    }
+    
+    // Modal-Content zu Bearbeitungsansicht umschalten
+    const notesContent = document.getElementById('notes-content');
+    if (notesContent) {
+        notesContent.innerHTML = `
+            <div class="container-fluid h-100">
+                <div class="row h-100">
+                    <div class="col-12 h-100 d-flex flex-column">
+                        <!-- Zurück Button -->
+                        <button class="btn btn-outline-secondary mb-3 align-self-start" onclick="loadNotes()">
+                            <i class="fas fa-arrow-left me-1"></i> Zurück zur Übersicht
+                        </button>
+                        
+                        <!-- Editor -->
+                        <div class="flex-fill d-flex flex-column">
+                            <div class="mb-3">
+                                
+                                <input type="text" 
+                                       id="modal-note-title" 
+                                       class="form-control" 
+                                       value="${escapeHtml(note.title || '')}"
+                                       placeholder="Titel der Notiz">
+                            </div>
+                            
+                            <div class="flex-fill d-flex flex-column">
+                                
+                                <textarea id="modal-note-content" 
+                                          class="form-control flex-fill" 
+                                          style="min-height: 400px; resize: vertical;" 
+                                          placeholder="Schreibe hier deine Notiz...">${escapeHtml(note.content || '')}</textarea>
+                            </div>
+                            
+                            <!-- Speichern Button -->
+                            <div class="d-flex justify-content-end mt-3">
+                                <button class="btn btn-success" onclick="saveNoteFromModalEditor(${note.id})">
+                                    <i class="fas fa-save me-1"></i> Speichern
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
 
-// ====================================================
-// GLOBALE FUNKTIONEN VERFÜGBAR MACHEN
-// ====================================================
+async function saveNoteFromModalEditor(noteId) {
+    const title = document.getElementById('modal-note-title').value.trim();
+    const content = document.getElementById('modal-note-content').value;
+    
+    if (!title) {
+        showTempMessage('Titel ist erforderlich', 'warning');
+        return;
+    }
+    
+    try {
+        console.log('💾 Speichere Notiz aus Modal-Editor:', title);
+        
+        const response = await fetch(`/api/notes/${noteId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: title,
+                content: content
+            })
+        });
+        
+        if (response.ok) {
+            const updatedNote = await response.json();
+            
+            // Notiz in allNotes aktualisieren
+            const noteIndex = allNotes.findIndex(n => n.id === noteId);
+            if (noteIndex !== -1) {
+                allNotes[noteIndex] = updatedNote;
+            }
+            
+            showTempMessage('✅ Notiz gespeichert!', 'success');
+            
+            // Sidebar informieren (falls verfügbar)
+            if (typeof window.updateSidebarFromManager === 'function') {
+                window.updateSidebarFromManager(allNotes);
+            }
+            
+            // Zurück zur Übersicht
+            setTimeout(() => {
+                loadNotes();
+            }, 500);
+            
+        } else {
+            const error = await response.json();
+            showTempMessage('Fehler beim Speichern: ' + (error.error || 'Unbekannter Fehler'), 'danger');
+        }
+    } catch (error) {
+        console.error('❌ Fehler beim Speichern:', error);
+        showTempMessage('Fehler beim Speichern: ' + error.message, 'danger');
+    }
+}
 
 async function deleteNoteFromModal(noteId) {
     const note = allNotes.find(n => n.id === noteId);
@@ -865,6 +801,96 @@ async function deleteNoteFromModal(noteId) {
     }
 }
 
+// ====================================================
+// HILFSFUNKTIONEN
+// ====================================================
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'Unbekannt';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('de-DE', { 
+        day: '2-digit', 
+        month: '2-digit',
+        year: 'numeric'
+    });
+}
+
+function showTempMessage(message, type = 'info') {
+    // Prüfen ob bereits eine Nachricht existiert
+    let alertContainer = document.getElementById('temp-alert-container');
+    
+    if (!alertContainer) {
+        alertContainer = document.createElement('div');
+        alertContainer.id = 'temp-alert-container';
+        alertContainer.style.position = 'fixed';
+        alertContainer.style.top = '20px';
+        alertContainer.style.right = '20px';
+        alertContainer.style.zIndex = '9999';
+        alertContainer.style.minWidth = '300px';
+        document.body.appendChild(alertContainer);
+    }
+    
+    // Neue Alert erstellen
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    alertContainer.appendChild(alertDiv);
+    
+    // Auto-Hide nach 3 Sekunden
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.classList.remove('show');
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 150);
+        }
+    }, 3000);
+}
+
+// ====================================================
+// EVENT LISTENERS
+// ====================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📋 Notes-Manager DOM ready');
+    
+    // Modal Event-Listener
+    const notesModal = document.getElementById('notesModal');
+    if (notesModal) {
+        notesModal.addEventListener('show.bs.modal', function() {
+            console.log('📋 Notizen-Modal wird geöffnet - lade Notizen');
+            setTimeout(() => {
+                loadNotes();
+            }, 100);
+        });
+        
+        console.log('✅ Notes-Manager Modal Events registriert');
+    }
+    
+    // Sidebar initialisieren
+    setTimeout(() => {
+        initializeSidebarNotes();
+    }, 200);
+    
+    console.log('✅ Notes-Manager bereit');
+});
+
+// ====================================================
+// GLOBALE FUNKTIONEN VERFÜGBAR MACHEN
+// ====================================================
+
 // Sidebar-Funktionen
 window.loadNoteInSidebar = loadNoteInSidebar;
 window.saveCurrentNote = saveCurrentNote;
@@ -872,5 +898,17 @@ window.createNewNoteFromSidebar = createNewNoteFromSidebar;
 window.createNewNote = createNewNoteFromSidebar; // ALIAS für HTML
 window.deleteCurrentNote = deleteCurrentNote;
 window.editNoteTitle = editNoteTitle;
+
+// Modal-Funktionen
+window.loadNotes = loadNotes;
+window.editNoteInModal = editNoteInModal;
+window.saveNoteFromModalEditor = saveNoteFromModalEditor;
+window.deleteNoteFromModal = deleteNoteFromModal;
+
+// Utility-Funktionen
+window.openNotesModal = function() {
+    const notesModal = new bootstrap.Modal(document.getElementById('notesModal'));
+    notesModal.show();
+};
 
 console.log('📋 Notes-Manager.js vollständig geladen!');
