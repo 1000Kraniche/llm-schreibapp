@@ -8,12 +8,17 @@
 <div class="container py-5">
   <div class="row g-4">
 
-    <!-- Neues Projekt -->
-    {% if projects is not empty %}
+<!-- Neues Projekt -->
+{% if projects is not empty %}
 <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-    <div class="card h-100 border-0 text-center">
-        <a href="#" class="text-decoration-none text-primary fs-1">+</a>
-        <p class="mt-2 mb-0">Neues Projekt</p>
+    <div class="card h-100 border-0 text-center" 
+         style="cursor: pointer;" 
+         data-bs-toggle="modal" 
+         data-bs-target="#createProjectModal">
+        <div class="card-body d-flex flex-column justify-content-center">
+            <div class="text-primary fs-1">+</div>
+            <p class="mt-2 mb-0">Neues Projekt</p>
+        </div>
     </div>
 </div>
 {% endif %}
