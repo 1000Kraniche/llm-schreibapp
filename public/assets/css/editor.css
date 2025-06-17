@@ -488,3 +488,8 @@
 .note-editor.fullscreen .note-dropdown-menu {
     z-index: 9999 !important;
 }
+
+.note-editor .note-toolbar .note-color .dropdown-toggle, 
+.note-popover .popover-content .note-color .dropdown-toggle {
+    width: auto !important;
+}
