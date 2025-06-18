@@ -7,8 +7,6 @@ console.log('📝 Workspace.js wird geladen...');
 // Globale Variablen
 let editor = null;
 let hasUnsavedChanges = false;
-let autoSaveEnabled = true;
-let autoSaveTimer = null;
 let projectSlug = null;
 let wordCountUpdateTimer = null;
 
@@ -27,9 +25,6 @@ function initializeSummernoteEditor() {
     } else {
         console.error('❌ Kein data-project-slug gefunden!');
     }
-
-    // Auto-Save Button initial korrekt setzen
-    updateAutoSaveButtonColors();
 
     // Summernote initialisieren
     $('#summernote-editor').summernote({
@@ -52,7 +47,18 @@ function initializeSummernoteEditor() {
         ],
         callbacks: {
             onChange: function (contents, $editable) {
-                handleContentChange(contents);
+                // Einfache Version ohne Auto-Save
+                hasUnsavedChanges = true;
+                updateSaveStatus('Ungespeichert');
+
+                // Wort-Zählung mit Debounce
+                if (wordCountUpdateTimer) {
+                    clearTimeout(wordCountUpdateTimer);
+                }
+                wordCountUpdateTimer = setTimeout(() => {
+                    updateWordCount();
+                }, 500);
+                // KEIN AUTO-SAVE TIMER!
             },
             onInit: function () {
                 console.log('✅ Summernote Editor initialisiert');
@@ -166,32 +172,7 @@ function fixTableInsertion() {
         }
     }, 1000);
 }
-// ====================================================
-// CONTENT CHANGE HANDLING
-// ====================================================
 
-function handleContentChange(contents) {
-    hasUnsavedChanges = true;
-    updateSaveStatus('Ungespeichert');
-
-    // Wort-Zählung mit Debounce
-    if (wordCountUpdateTimer) {
-        clearTimeout(wordCountUpdateTimer);
-    }
-    wordCountUpdateTimer = setTimeout(() => {
-        updateWordCount();
-    }, 500);
-
-    // Auto-Save
-    if (autoSaveEnabled) {
-        if (autoSaveTimer) {
-            clearTimeout(autoSaveTimer);
-        }
-        autoSaveTimer = setTimeout(() => {
-            saveNow();
-        }, 3000); // Auto-Save nach 3 Sekunden
-    }
-}
 
 // ====================================================
 // SPEICHER-FUNKTIONEN (API-FIX!)
@@ -233,38 +214,11 @@ async function saveNow() {
     }
 }
 
-function toggleAutoSave() {
-    autoSaveEnabled = !autoSaveEnabled;
-
-    // Button-Farben und Text aktualisieren
-    updateAutoSaveButtonColors();
-
-    const message = autoSaveEnabled ? '✅ Auto-Save aktiviert' : '⚠️ Auto-Save deaktiviert';
-    showTempMessage(message, autoSaveEnabled ? 'success' : 'warning');
-
-    console.log('🤖 Auto-Save:', autoSaveEnabled ? 'aktiviert' : 'deaktiviert');
-}
 
 // ====================================================
 // UI UPDATE FUNKTIONEN
 // ====================================================
 
-function updateAutoSaveButtonColors() {
-    const autoSaveButton = document.querySelector('button[onclick="toggleAutoSave()"]');
-    const statusElement = document.getElementById('autosave-status');
-
-    if (autoSaveButton && statusElement) {
-        if (autoSaveEnabled) {
-            // Auto-Save AN -> Primary (blau)
-            autoSaveButton.className = 'btn btn-primary btn-sm';
-            statusElement.textContent = 'Auto-Save: Ein';
-        } else {
-            // Auto-Save AUS -> Warning (orange/gelb)
-            autoSaveButton.className = 'btn btn-warning btn-sm';
-            statusElement.textContent = 'Auto-Save: Aus';
-        }
-    }
-}
 
 function updateSaveStatus(status) {
     const saveTimeElement = document.getElementById('editor-save-time');
@@ -360,7 +314,6 @@ function openNotesModal() {
 
 window.saveNow = saveNow;
 window.showWordCount = showWordCount;
-window.toggleAutoSave = toggleAutoSave;
 window.openNotesModal = openNotesModal;
 window.initializeSummernoteEditor = initializeSummernoteEditor;
 

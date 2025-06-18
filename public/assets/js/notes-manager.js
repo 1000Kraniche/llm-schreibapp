@@ -1,5 +1,5 @@
 // ====================================================
-// NOTIZEN-MANAGER.JS - ORIGINAL CARD DESIGN + API FIXES
+// NOTIZEN-MANAGER.JS - MODAL-SIDEBAR SYNC + AUTO-SAVE FREE
 // ====================================================
 
 console.log('📋 Notes-Manager.js wird geladen...');
@@ -9,8 +9,7 @@ let allNotes = [];
 let projectSlugForNotes = null;
 let currentFolderId = null;
 
-// Sidebar-Variablen
-let noteAutoSaveEnabled = true;
+// Sidebar-Variablen (Auto-Save entfernt)
 let noteHasUnsavedChanges = false;
 let sidebarNotes = [];
 let currentNoteData = null;
@@ -26,6 +25,12 @@ let sidebarProjectSlug = null;
  */
 async function loadNotes() {
     console.log('📋 Lade Notizen für Modal...');
+    
+    // ✅ CLEANUP: Modal Summernote zerstören falls aktiv
+    if ($('#modal-summernote-editor').length && $('#modal-summernote-editor').hasClass('note-editor')) {
+        $('#modal-summernote-editor').summernote('destroy');
+        console.log('🗑️ Modal Summernote zerstört');
+    }
     
     // Modal zurück zu normaler Höhe
     const modalDialog = document.querySelector('#notesModal .modal-dialog');
@@ -86,11 +91,6 @@ async function loadNotes() {
             // Notizen im Modal anzeigen (ORIGINAL CARD DESIGN)
             renderNotesInModal();
             
-            // Sidebar informieren (falls vorhanden)
-            if (typeof window.updateSidebarFromManager === 'function') {
-                window.updateSidebarFromManager(allNotes);
-            }
-            
         } else {
             console.error('❌ Fehler beim Laden der Notizen:', response.status);
             showNotesError(`Fehler beim Laden (${response.status})`);
@@ -123,26 +123,40 @@ function renderNotesInModal() {
     // EINFACHE LISTE (Original Design)
     let html = '<div class="list-group">';
     
-    allNotes.forEach(note => {
-        const cleanTitle = note.title ? note.title.replace(/<[^>]*>/g, '') : 'Unbenannte Notiz';
-        
-        html += `
-            <div class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-1">${escapeHtml(cleanTitle)}</h6>
-                    <small class="text-muted">${formatDate(note.updated_at || note.created_at)}</small>
-                </div>
-                <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary btn-sm" onclick="editNoteInModal(${note.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-outline-danger btn-sm" onclick="deleteNoteFromModal(${note.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
+   allNotes.forEach(note => {
+    const cleanTitle = note.title ? note.title.replace(/<[^>]*>/g, '') : 'Unbenannte Notiz';
+    
+    const createdRaw = note.created_at;
+    const updatedRaw = note.updated_at;
+    
+    const createdDate = formatDate(createdRaw);
+    const updatedDate = updatedRaw ? formatDate(updatedRaw) : null;
+    
+    html += `
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div class="flex-grow-1">
+                <h6 class="mb-1">
+                    <a href="#" onclick="editNoteInModal(${note.id}); return false;" class="text-decoration-none">
+                        ${escapeHtml(cleanTitle)}
+                    </a>
+                </h6>
+                <small class="text-muted">
+                    <i class="fas fa-plus-circle me-1"></i>Erstellt: ${escapeHtml(createdDate)}
+                    ${updatedRaw && updatedRaw !== createdRaw ? ` • <i class="fas fa-edit me-1"></i>Bearbeitet: ${escapeHtml(updatedDate)}` : ''}
+                </small>
             </div>
-        `;
-    });
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-primary btn-sm" onclick="editNoteInModal(${note.id})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteNoteFromModal(${note.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+});
+
     
     html += '</div>';
     notesContent.innerHTML = html;
@@ -167,11 +181,11 @@ function showNotesError(message) {
 }
 
 // ====================================================
-// SIDEBAR-FUNKTIONEN (WENIGER FRONTEND-MESSAGES)
+// SIDEBAR-FUNKTIONEN (AUTO-SAVE FREE)
 // ====================================================
 
 /**
- * Notiz in Sidebar laden UND Inhalt anzeigen (WENIGER MESSAGES)
+ * Notiz in Sidebar laden UND Inhalt anzeigen
  */
 async function loadNoteInSidebar(noteId) {
     console.log('📖 Lade Notiz in Sidebar:', noteId);
@@ -186,11 +200,10 @@ async function loadNoteInSidebar(noteId) {
             console.log('✅ Notiz geladen:', currentNoteData.title, 
                        'Content-Länge:', currentNoteData.content ? currentNoteData.content.length : 0);
             
-            // NEUE METHODE: Verwende Sidebar-spezifische Update-Funktion
+            // Display aktualisieren
             if (typeof updateSidebarNoteDisplay === 'function') {
                 updateSidebarNoteDisplay(currentNoteData);
             } else {
-                // Fallback zur alten Methode
                 updateNoteDisplay();
             }
             
@@ -219,12 +232,11 @@ async function saveCurrentNote() {
         return;
     }
     
-    // NEUE METHODE: Content aus Sidebar Editor holen (unterstützt beide Modi)
+    // Content aus Sidebar Editor holen
     let updatedContent;
     if (typeof getContentFromSidebarEditor === 'function') {
         updatedContent = getContentFromSidebarEditor();
     } else {
-        // Fallback zur alten Methode
         const textarea = document.getElementById('main-note-textarea');
         updatedContent = textarea ? textarea.value : '';
     }
@@ -304,8 +316,10 @@ async function createNewNoteFromSidebar() {
             // UI aktualisieren
             renderNotesDropdown();
             
-            // Neue Notiz direkt laden
-            await loadNoteInSidebar(newNote.id);
+            // Neue Notiz laden (mit delay für Backend)
+            setTimeout(async () => {
+                await loadNoteInSidebar(newNote.id);
+            }, 200);
             
             showTempMessage('✅ Notiz "' + title + '" erstellt!', 'success');
             
@@ -313,7 +327,7 @@ async function createNewNoteFromSidebar() {
             if (typeof loadNotes === 'function') {
                 setTimeout(() => {
                     loadNotes();
-                }, 100);
+                }, 300);
             }
             
         } else {
@@ -419,7 +433,7 @@ function updateNoteDisplay() {
         console.warn('⚠️ Element #current-note-title-input nicht gefunden');
     }
     
-    // Content laden - NEUE METHODE
+    // Content laden
     if (typeof loadContentInSidebarEditor === 'function') {
         loadContentInSidebarEditor(currentNoteData.content);
     } else {
@@ -444,7 +458,6 @@ function updateNoteDisplay() {
     
     console.log('✅ Note Display vollständig aktualisiert');
 }
-
 
 function showNoteEditor() {
     const noNote = document.getElementById('no-note-selected');
@@ -603,26 +616,7 @@ function initializeSidebarNotes() {
         console.log('📊 Project Slug für Sidebar:', sidebarProjectSlug);
     } else {
         console.error('❌ Kein data-project-slug gefunden!');
-    }
-    
-    // Auto-Save für Notiz-Änderungen (nur für Plain-Text-Modus)
-    const textarea = document.getElementById('main-note-textarea');
-    if (textarea) {
-        // Fallback für Plain-Text-Modus (Summernote hat eigene Callbacks)
-        textarea.addEventListener('input', function() {
-            // Nur triggern wenn NICHT im Rich-Text-Modus
-            if (typeof sidebarRichTextEnabled === 'undefined' || !sidebarRichTextEnabled) {
-                noteHasUnsavedChanges = true;
-                updateNoteSaveStatus('Ungespeichert');
-                
-                if (noteAutoSaveEnabled) {
-                    clearTimeout(window.noteAutoSaveTimer);
-                    window.noteAutoSaveTimer = setTimeout(() => {
-                        saveCurrentNote();
-                    }, 3000);
-                }
-            }
-        });
+        return;
     }
     
     // Titel-Input Enter-Handler
@@ -635,13 +629,6 @@ function initializeSidebarNotes() {
         });
     }
     
-    // Optional: Summernote nach dem Laden aktivieren
-    // setTimeout(() => {
-    //     if (typeof initializeSidebarSummernote === 'function') {
-    //         initializeSidebarSummernote();
-    //     }
-    // }, 1000);
-    
     // Notizen laden
     if (sidebarProjectSlug) {
         setTimeout(() => {
@@ -653,7 +640,7 @@ function initializeSidebarNotes() {
 }
 
 // ====================================================
-// MODAL FUNCTIONS (ORIGINAL EDITOR)
+// MODAL FUNCTIONS (MIT SYNC-FIXES)
 // ====================================================
 
 async function editNoteInModal(noteId) {
@@ -695,7 +682,6 @@ async function editNoteInModal(noteId) {
                         <!-- Editor -->
                         <div class="flex-fill d-flex flex-column">
                             <div class="mb-3">
-                                
                                 <input type="text" 
                                        id="modal-note-title" 
                                        class="form-control" 
@@ -703,11 +689,11 @@ async function editNoteInModal(noteId) {
                                        placeholder="Titel der Notiz">
                             </div>
                             
+                            <!-- ✅ NEUER SUMMERNOTE EDITOR STATT TEXTAREA -->
                             <div class="flex-fill d-flex flex-column">
-                                <textarea id="modal-note-content" 
-                                          class="form-control flex-fill" 
-                                          style="min-height: 400px; resize: vertical;" 
-                                          placeholder="Schreibe hier deine Notiz...">${escapeHtml(note.content || '')}</textarea>
+                                <div id="modal-summernote-editor" class="flex-fill">
+                                    ${note.content || ''}
+                                </div>
                             </div>
                             
                             <!-- Speichern Button -->
@@ -721,12 +707,19 @@ async function editNoteInModal(noteId) {
                 </div>
             </div>
         `;
+        
+        // ✅ SUMMERNOTE FÜR MODAL INITIALISIEREN
+        setTimeout(() => {
+            initializeModalSummernote();
+        }, 100);
     }
 }
 
 async function saveNoteFromModalEditor(noteId) {
     const title = document.getElementById('modal-note-title').value.trim();
-    const content = document.getElementById('modal-note-content').value;
+    
+    // ✅ CONTENT AUS SUMMERNOTE HOLEN STATT TEXTAREA
+    const content = $('#modal-summernote-editor').summernote('code');
     
     if (!title) {
         showTempMessage('Titel ist erforderlich', 'warning');
@@ -741,7 +734,7 @@ async function saveNoteFromModalEditor(noteId) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 title: title,
-                content: content
+                content: content  // Jetzt HTML-Content statt Plain-Text
             })
         });
         
@@ -754,15 +747,29 @@ async function saveNoteFromModalEditor(noteId) {
                 allNotes[noteIndex] = updatedNote;
             }
             
-            showTempMessage('✅ Notiz gespeichert!', 'success');
-            
-            // Sidebar informieren (falls verfügbar)
-            if (typeof window.updateSidebarFromManager === 'function') {
-                window.updateSidebarFromManager(allNotes);
+            // ✅ SYNC-FIX: Sidebar-Liste aktualisieren
+            const sidebarIndex = sidebarNotes.findIndex(n => n.id === noteId);
+            if (sidebarIndex !== -1) {
+                sidebarNotes[sidebarIndex] = updatedNote;
+                renderNotesDropdown();
+                
+                // Falls diese Notiz gerade aktiv ist, Display aktualisieren
+                if (currentNoteId === noteId) {
+                    currentNoteData = updatedNote;
+                    if (typeof updateSidebarNoteDisplay === 'function') {
+                        updateSidebarNoteDisplay(updatedNote);
+                    }
+                }
             }
+            
+            showTempMessage('✅ Notiz gespeichert!', 'success');
             
             // Zurück zur Übersicht
             setTimeout(() => {
+                // ✅ SUMMERNOTE ZERSTÖREN BEVOR WIR ZURÜCKGEHEN
+                if ($('#modal-summernote-editor').length) {
+                    $('#modal-summernote-editor').summernote('destroy');
+                }
                 loadNotes();
             }, 500);
             
@@ -793,13 +800,23 @@ async function deleteNoteFromModal(noteId) {
             // Notiz aus lokaler Liste entfernen
             allNotes = allNotes.filter(n => n.id !== noteId);
             
+            // ✅ SYNC-FIX: Sidebar-Liste aktualisieren
+            sidebarNotes = sidebarNotes.filter(n => n.id !== noteId);
+            renderNotesDropdown();
+            
+            // Falls gelöschte Notiz gerade aktiv war, andere Notiz laden
+            if (currentNoteId === noteId) {
+                if (sidebarNotes.length > 0) {
+                    await loadNoteInSidebar(sidebarNotes[0].id);
+                } else {
+                    currentNoteId = null;
+                    currentNoteData = null;
+                    showEmptyNotesState();
+                }
+            }
+            
             // UI aktualisieren
             renderNotesInModal();
-            
-            // Sidebar informieren
-            if (typeof window.updateSidebarFromManager === 'function') {
-                window.updateSidebarFromManager(allNotes);
-            }
             
             showTempMessage(`✅ Notiz "${note.title}" gelöscht`, 'success');
             
@@ -809,6 +826,31 @@ async function deleteNoteFromModal(noteId) {
     } catch (error) {
         console.error('❌ Fehler beim Löschen:', error);
         showTempMessage('❌ Verbindungsfehler beim Löschen', 'danger');
+    }
+}
+
+// ====================================================
+// MODAL-SIDEBAR SYNC HILFSFUNKTIONEN
+// ====================================================
+
+async function refreshSidebarFromModal() {
+    console.log('🔄 Aktualisiere Sidebar nach Modal-Aktion...');
+    
+    if (!sidebarProjectSlug) return;
+    
+    try {
+        const apiUrl = `/api/notes/project/${sidebarProjectSlug}`;
+        const response = await fetch(apiUrl);
+        
+        if (response.ok) {
+            const freshNotes = await response.json();
+            sidebarNotes = freshNotes;
+            renderNotesDropdown();
+            
+            console.log('✅ Sidebar-Liste aktualisiert:', sidebarNotes.length, 'Notizen');
+        }
+    } catch (error) {
+        console.error('❌ Fehler beim Aktualisieren der Sidebar:', error);
     }
 }
 
@@ -824,13 +866,44 @@ function escapeHtml(text) {
 
 function formatDate(dateString) {
     if (!dateString) return 'Unbekannt';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('de-DE', { 
-        day: '2-digit', 
-        month: '2-digit',
-        year: 'numeric'
-    });
+
+    // ✅ FIX: Explizit UTC behandeln wenn Z am Ende fehlt
+    let parsedDate;
+    if (dateString.includes('T') && !dateString.includes('Z') && !dateString.includes('+')) {
+        // Backend gibt "2025-06-18 14:00:00" → als UTC behandeln
+        parsedDate = new Date(dateString + 'Z');
+    } else {
+        parsedDate = new Date(dateString);
+    }
+    
+    const now = new Date();
+    const diffMs = now - parsedDate;
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMinutes / 60);
+
+    // Unter 2 Stunden: "vor X min"
+    if (diffMinutes < 120) {
+        if (diffMinutes < 1) {
+            return 'gerade eben';
+        }
+        return `vor ${diffMinutes} min`;
+    } 
+    // 2-24 Stunden: "vor X Stunden"
+    else if (diffHours < 24) {
+        return `vor ${diffHours} Stunden`;
+    } 
+    // Ab 24 Stunden: Nur Datum
+    else {
+        return parsedDate.toLocaleDateString('de-DE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    }
 }
+
+
+
 
 function showTempMessage(message, type = 'info') {
     // Prüfen ob bereits eine Nachricht existiert
@@ -887,6 +960,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 100);
         });
         
+        // ✅ SYNC-FIX: Beim Schließen des Modals Sidebar aktualisieren
+        notesModal.addEventListener('hidden.bs.modal', function() {
+            console.log('📋 Modal geschlossen - aktualisiere Sidebar');
+            setTimeout(() => {
+                refreshSidebarFromModal();
+            }, 100);
+        });
+        
         console.log('✅ Notes-Manager Modal Events registriert');
     }
     
@@ -902,6 +983,47 @@ document.addEventListener('DOMContentLoaded', function() {
 // GLOBALE FUNKTIONEN VERFÜGBAR MACHEN
 // ====================================================
 
+// ✅ NEUE FUNKTION: Modal Summernote initialisieren
+function initializeModalSummernote() {
+    $('#modal-summernote-editor').summernote({
+        height: 400,
+        minHeight: 300,
+        maxHeight: 600,
+        lang: 'de-DE',
+        placeholder: 'Schreibe hier deine Notiz...',
+        focus: true,
+        disableResizeEditor: false, // Resize im Modal erlauben
+        
+        // ✅ DEINE GEWÜNSCHTE TOOLBAR:
+        toolbar: [
+            ['style', ['style']],                           // Überschriften (H1, H2, etc.)
+            ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']], // Text-Formatierung
+            ['color', ['forecolor', 'backcolor']],          // Text- und Hintergrundfarben
+            ['para', ['ul', 'ol', 'paragraph']],           // Listen + Textausrichtung
+            ['height', ['height']],                         // Zeilenhöhe
+            ['view', ['codeview']],                         // Quellcode anzeigen
+            ['misc', ['undo', 'redo']]                      // Undo/Redo
+        ],
+        
+        callbacks: {
+            onInit: function() {
+                console.log('✅ Modal Summernote initialisiert');
+                
+                // Bootstrap 5 Fix für Modal-Dropdowns
+                setTimeout(() => {
+                    $('#modal-summernote-editor').closest('.modal').find('.note-btn[data-toggle="dropdown"]').each(function() {
+                        $(this).attr('data-bs-toggle', 'dropdown');
+                        $(this).removeAttr('data-toggle');
+                    });
+                }, 100);
+            },
+            onChange: function(contents, $editable) {
+                console.log('📝 Modal Editor Content geändert');
+            }
+        }
+    });
+}
+
 // Sidebar-Funktionen
 window.loadNoteInSidebar = loadNoteInSidebar;
 window.saveCurrentNote = saveCurrentNote;
@@ -915,6 +1037,7 @@ window.loadNotes = loadNotes;
 window.editNoteInModal = editNoteInModal;
 window.saveNoteFromModalEditor = saveNoteFromModalEditor;
 window.deleteNoteFromModal = deleteNoteFromModal;
+window.initializeModalSummernote = initializeModalSummernote; // ✅ NEU
 
 // Utility-Funktionen
 window.openNotesModal = function() {

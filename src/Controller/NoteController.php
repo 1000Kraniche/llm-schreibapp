@@ -233,7 +233,8 @@ class NoteController extends AbstractController
                 'title' => $note->getTitle(),
                 'content' => $note->getContent(),
                 'type' => 'note',
-                'updated_at' => method_exists($note, 'getUpdatedAt') && $note->getUpdatedAt() ? $note->getUpdatedAt()->format('Y-m-d H:i:s') : null,
+                'created_at' => method_exists($note, 'getCreatedAt') && $note->getCreatedAt() ? $note->getCreatedAt()->format('c') : null,
+                'updated_at' => method_exists($note, 'getUpdatedAt') && $note->getUpdatedAt() ? $note->getUpdatedAt()->format('c') : null,
                 'parentId' => $note->getParentNote() ? $note->getParentNote()->getId() : null
             ];
         }, $notes);

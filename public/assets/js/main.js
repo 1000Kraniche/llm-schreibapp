@@ -85,24 +85,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-/**
- * Formatiert Datum/Zeit für Anzeige
- * @param {Date} date - Datum
- * @returns {string} Formatiertes Datum
- */
-function formatDateTime(date) {
-    if (!date) return 'Unbekannt';
-    
-    const options = {
-        year: 'numeric',
-        month: '2-digit', 
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    };
-    
-    return new Date(date).toLocaleDateString('de-DE', options);
-}
+
 
 // ====================================================
 // PROJECT-LIST FUNKTIONEN

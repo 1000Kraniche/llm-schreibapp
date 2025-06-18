@@ -31,21 +31,12 @@ function initializeSidebarSummernote() {
             disableResizeEditor: true,
             callbacks: {
                 onChange: function(contents, $editable) {
-                    // Auto-Save Trigger
+                    // ✅ NEUE, EINFACHE onChange:
                     if (typeof noteHasUnsavedChanges !== 'undefined') {
                         noteHasUnsavedChanges = true;
                     }
                     if (typeof updateNoteSaveStatus === 'function') {
                         updateNoteSaveStatus('Ungespeichert');
-                    }
-                    
-                    if (typeof noteAutoSaveEnabled !== 'undefined' && noteAutoSaveEnabled) {
-                        clearTimeout(window.noteAutoSaveTimer);
-                        window.noteAutoSaveTimer = setTimeout(() => {
-                            if (typeof saveCurrentNote === 'function') {
-                                saveCurrentNote();
-                            }
-                        }, 3000);
                     }
                 },
                 onFocus: function() {

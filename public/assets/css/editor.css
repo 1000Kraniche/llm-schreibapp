@@ -517,7 +517,7 @@
 
 /* Toolbar NUR bei Focus sichtbar */
 .note-side .note-editor:focus-within .note-toolbar {
-    left: -6ßpx !important; /* Sichtbar aber kompakt */
+    left: -60px !important; /* Sichtbar aber kompakt */
     opacity: 1 !important; /* Sichtbar */
     pointer-events: all !important; /* Klickbar */
 }
@@ -558,9 +558,8 @@
 }
 
 .note-side .note-editor .note-editable {
-    padding: 0.75rem !important;
+    padding: 10px !important;
     min-height: 250px !important;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
     line-height: 1.5 !important;
 }
 
@@ -616,7 +615,6 @@
 .notes-content {
     height: 400px !important; /* Feste Höhe */
     max-height: 400px !important;
-    overflow-y: auto !important; /* Scroll wenn nötig */
     flex: none !important; /* Keine flexible Höhe mehr */
 }
 
@@ -640,4 +638,5 @@
     min-height: 250px !important;
     max-height: 280px !important;
     overflow-y: auto !important;
+    box-sizing: content-box;
 }
