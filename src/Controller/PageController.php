@@ -152,7 +152,7 @@ class PageController extends AbstractController
     {
         // Settings nur für eingeloggte User
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-        
+
         return $this->render('page/settings.html.twig');
     }
 
@@ -164,10 +164,10 @@ class PageController extends AbstractController
     {
         // Profil nur für eingeloggte User
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-        
+
         // TODO: Echte User-Statistiken aus DB laden
         // Beispiel: Anzahl Projekte, Wörter, Notizen des aktuellen Users
-        
+
         return $this->render('page/profile.html.twig');
     }
 
@@ -234,26 +234,29 @@ class PageController extends AbstractController
     private function createSlug(string $title): string
     {
         // Deutsche Umlaute ersetzen
-        $slug = str_replace(['ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü'], 
-                           ['ae', 'oe', 'ue', 'ss', 'ae', 'oe', 'ue'], $title);
-        
+        $slug = str_replace(
+            ['ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü'],
+            ['ae', 'oe', 'ue', 'ss', 'ae', 'oe', 'ue'],
+            $title
+        );
+
         // Kleinbuchstaben
         $slug = strtolower($slug);
-        
+
         // Nur Buchstaben, Zahlen und Bindestriche erlauben
         $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
-        
+
         // Mehrfache Bindestriche entfernen
         $slug = preg_replace('/-+/', '-', $slug);
-        
+
         // Bindestriche am Anfang/Ende entfernen
         $slug = trim($slug, '-');
-        
+
         // Falls leer, Fallback
         if (empty($slug)) {
             $slug = 'projekt';
         }
-        
+
         return $slug;
     }
 

@@ -3,7 +3,7 @@
         'name' => 'symfony/skeleton',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '187154e92524e2f39c9b13446d3a0cb86d74df64',
+        'reference' => '7f8418c6bd01aa589a573de6f5762f82c642fa15',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -252,6 +252,15 @@
             'install_path' => __DIR__ . '/../runtime/frankenphp-symfony',
             'aliases' => array(),
             'dev_requirement' => false,
+        ),
+        'squizlabs/php_codesniffer' => array(
+            'pretty_version' => '3.13.2',
+            'version' => '3.13.2.0',
+            'reference' => '5b5e3821314f947dd040c70f7992a64eac89025c',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../squizlabs/php_codesniffer',
+            'aliases' => array(),
+            'dev_requirement' => true,
         ),
         'symfony/asset' => array(
             'pretty_version' => 'v7.2.0',
@@ -697,7 +706,7 @@
         'symfony/skeleton' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '187154e92524e2f39c9b13446d3a0cb86d74df64',
+            'reference' => '7f8418c6bd01aa589a573de6f5762f82c642fa15',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

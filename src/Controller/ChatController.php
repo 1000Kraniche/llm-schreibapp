@@ -1,4 +1,5 @@
 <?php
+
 // src/Controller/ChatController.php - SLUG-BASIERTE VERSION
 
 namespace App\Controller;
@@ -17,7 +18,7 @@ class ChatController extends AbstractController
     {
         // 3 Minuten PHP Timeout
         set_time_limit(180);
-        
+
         $data = json_decode($request->getContent(), true);
         $prompt = $data['prompt'] ?? null;
         $projectSlug = $data['project_slug'] ?? null;
@@ -32,10 +33,10 @@ class ChatController extends AbstractController
         // Projekt-Kontext aufbauen
         $context = $this->buildProjectContext($projectSlug, $em);
         error_log("ChatController DEBUG: Context length=" . strlen($context));
-        
+
         // Vollständigen Prompt mit Kontext erstellen
         $fullPrompt = $context . "\n\n=== USER QUESTION ===\n" . $prompt . "\n\nPlease respond as a helpful writing assistant:";
-        
+
         error_log("ChatController DEBUG: Full prompt length=" . strlen($fullPrompt));
 
         try {
@@ -68,7 +69,6 @@ class ChatController extends AbstractController
             }
 
             return new JsonResponse(['response' => $content['response']]);
-
         } catch (\Throwable $e) {
             error_log("ChatController ERROR: " . $e->getMessage());
             return new JsonResponse([
@@ -96,7 +96,7 @@ class ChatController extends AbstractController
 
             $context = "=== PROJECT CONTEXT ===\n";
             $context .= "Project Title: " . $project->getTitle() . "\n";
-            
+
             if ($project->getDescription()) {
                 $context .= "Project Description: " . $project->getDescription() . "\n";
             }
@@ -108,11 +108,11 @@ class ChatController extends AbstractController
                     $content = $doc->getContent();
                     $cleanContent = strip_tags($content);
                     $cleanContent = trim(preg_replace('/\s+/', ' ', $cleanContent));
-                    
+
                     if (strlen($cleanContent) > 1000) {
                         $cleanContent = substr($cleanContent, 0, 1000) . "...";
                     }
-                    
+
                     $context .= "\n=== CURRENT TEXT CONTENT ===\n" . $cleanContent . "\n";
                     error_log("ChatController DEBUG: Added text content, length=" . strlen($cleanContent));
                     break;
@@ -121,11 +121,11 @@ class ChatController extends AbstractController
 
             // Notizen hinzufügen
             $notes = $em->getRepository(\App\Entity\Note::class)->findBy(
-                ['project' => $project], 
-                ['id' => 'DESC'], 
+                ['project' => $project],
+                ['id' => 'DESC'],
                 3
             );
-            
+
             if (!empty($notes)) {
                 $context .= "\n=== PROJECT NOTES ===\n";
                 foreach ($notes as $note) {
@@ -149,7 +149,6 @@ class ChatController extends AbstractController
             $context .= "Reference the project content when appropriate.\n";
 
             return $context;
-
         } catch (\Exception $e) {
             error_log("ChatController ERROR in buildProjectContext: " . $e->getMessage());
             return "=== CONTEXT ===\nError loading project context: " . $e->getMessage();

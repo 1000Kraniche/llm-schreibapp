@@ -240,10 +240,25 @@ function updateSaveStatus(status) {
 }
 
 function updateWordCount() {
-    if (!editor) return;
+    // Versuche zuerst das globale editor Objekt
+    let content = '';
+    
+    if (editor && editor.summernote) {
+        content = editor.summernote('code');
+    } else {
+        // Fallback: Direkter Zugriff auf das Summernote Element
+        const summernoteElement = $('#summernote-editor');
+        if (summernoteElement.length) {
+            try {
+                content = summernoteElement.summernote('code');
+            } catch (e) {
+                console.warn('Summernote not ready yet');
+                return;
+            }
+        }
+    }
 
-    const content = editor.summernote('code');
-    const textContent = content.replace(/<[^>]*>/g, ''); // HTML-Tags entfernen
+    const textContent = content.replace(/<[^>]*>/g, '');
     const wordCount = textContent.trim() === '' ? 0 : textContent.trim().split(/\s+/).length;
 
     const wordCountElement = document.getElementById('word-count-number');

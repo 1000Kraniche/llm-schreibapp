@@ -33,7 +33,7 @@ class ProjectController extends AbstractController
 
         // Aktuellen User verwenden
         $user = $this->getUser();
-        
+
         if (!$user) {
             $this->addFlash('error', 'Du musst angemeldet sein um Projekte zu erstellen.');
             return $this->redirectToRoute('app_login');
@@ -55,7 +55,7 @@ class ProjectController extends AbstractController
         $em->flush();
 
         $this->addFlash('success', 'Projekt "' . $title . '" wurde erfolgreich erstellt!');
-        
+
         // Direkt zum neuen Projekt weiterleiten (mit Slug!)
         return $this->redirectToRoute('workspace', ['slug' => $project->getSlug()]);
     }
@@ -68,7 +68,7 @@ class ProjectController extends AbstractController
             'slug' => $slug,
             'owner' => $this->getUser()
         ]);
-        
+
         if (!$project) {
             throw $this->createNotFoundException('Projekt nicht gefunden oder du hast keinen Zugriff.');
         }
@@ -86,7 +86,7 @@ class ProjectController extends AbstractController
             'slug' => $slug,
             'owner' => $this->getUser()
         ]);
-        
+
         if (!$project) {
             throw $this->createNotFoundException('Projekt nicht gefunden oder du hast keinen Zugriff.');
         }
@@ -123,7 +123,7 @@ class ProjectController extends AbstractController
             'slug' => $slug,
             'owner' => $this->getUser()
         ]);
-        
+
         if (!$project) {
             throw $this->createNotFoundException('Projekt nicht gefunden oder du hast keinen Zugriff.');
         }
@@ -146,26 +146,29 @@ class ProjectController extends AbstractController
     private function createSlug(string $title): string
     {
         // Deutsche Umlaute ersetzen
-        $slug = str_replace(['ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü'], 
-                           ['ae', 'oe', 'ue', 'ss', 'ae', 'oe', 'ue'], $title);
-        
+        $slug = str_replace(
+            ['ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü'],
+            ['ae', 'oe', 'ue', 'ss', 'ae', 'oe', 'ue'],
+            $title
+        );
+
         // Kleinbuchstaben
         $slug = strtolower($slug);
-        
+
         // Nur Buchstaben, Zahlen und Bindestriche erlauben
         $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
-        
+
         // Mehrfache Bindestriche entfernen
         $slug = preg_replace('/-+/', '-', $slug);
-        
+
         // Bindestriche am Anfang/Ende entfernen
         $slug = trim($slug, '-');
-        
+
         // Falls leer, Fallback
         if (empty($slug)) {
             $slug = 'projekt';
         }
-        
+
         return $slug;
     }
 
@@ -180,12 +183,12 @@ class ProjectController extends AbstractController
         // Prüfen ob Slug bereits existiert (für diesen User, außer dem aktuellen Projekt)
         while (true) {
             $existingProject = $projectRepository->findOneBy(['slug' => $slug, 'owner' => $this->getUser()]);
-            
+
             // Wenn kein Projekt gefunden oder es ist das aktuelle Projekt (bei Updates)
             if (!$existingProject || ($excludeId && $existingProject->getId() === $excludeId)) {
                 break;
             }
-            
+
             $slug = $baseSlug . '-' . $counter;
             $counter++;
         }

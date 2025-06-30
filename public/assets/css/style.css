@@ -419,3 +419,82 @@ header ul {
     footer {
       background: rgba(0, 0, 0, 0.7);
     }
+/* NUR HOVER-EFFEKT - KEINE KLICK-FUNKTIONALITÄT */
+
+#current-note-name {
+    cursor: pointer !important;
+    transition: transform 0.2s ease !important;
+    height: 20px;
+}
+
+#current-note-name:hover {
+    transform: translateX(2px) !important;
+}
+
+#current-note-name:active {
+    transform: translateX(1px) !important;
+}
+
+/* Emoji VOR dem Text */
+#current-note-name::before {
+    content: "✏️ ";
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-size: 0.7rem;
+}
+
+#current-note-name:hover::before {
+    opacity: 0.99;
+}
+
+/* Mobile: Emoji weg */
+@media (max-width: 768px) {
+    #current-note-name::before {
+        content: "";
+    }
+}
+.notes-header #current-note-title-input {
+    background-color: #f8f9fa;
+    border: 0;
+    outline: none;
+    height: 18px;
+    min-height: 10px;
+    box-shadow: none;
+    line-height: 1;
+    font-size: .875em;
+    position: relative;
+    z-index: 10;
+    padding: 0 0 0 0px;
+    
+    /* ✅ SMOOTH TRANSITION für Padding */
+    transition: padding 0.3s ease;
+}
+
+.notes-header #current-note-title-input:hover,
+.notes-header #current-note-title-input:active,
+.notes-header #current-note-title-input:focus {
+    padding: 0 0 0 23px;
+}
+
+.note-title-sidebar-wrapper {
+    position: relative;
+}
+
+.current-note-title-input-emoji-overlay {
+    position: absolute;
+    opacity: 0;
+    top: 2px;
+    left: 0;
+    line-height: 1;
+    font-size: .875em;
+    z-index: 100;
+    
+    /* ✅ SMOOTH TRANSITION für Emoji Opacity */
+    transition: opacity 0.5s ease;
+}
+
+.notes-header #current-note-title-input:hover + .current-note-title-input-emoji-overlay,
+.notes-header #current-note-title-input:active + .current-note-title-input-emoji-overlay,
+.notes-header #current-note-title-input:focus + .current-note-title-input-emoji-overlay {
+    opacity: 1;
+}

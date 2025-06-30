@@ -109,7 +109,7 @@ class TextDocumentController extends AbstractController
             'id' => $data['project_id'],
             'owner' => $this->getUser()
         ]);
-        
+
         if (!$project) {
             return new JsonResponse(['error' => 'Projekt nicht gefunden'], 404);
         }

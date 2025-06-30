@@ -393,9 +393,116 @@ async function deleteCurrentNote() {
         showTempMessage('❌ Fehler beim Löschen: ' + error.message, 'danger');
     }
 }
+/**
+ * Titel-Edit-Modus starten
+ */
+function startTitleEdit() {
+    if (!currentNoteId) return; // Nur bei geladener Notiz
+
+    const titleDisplay = document.getElementById('current-note-name');
+    const titleInput = document.getElementById('current-note-title-input');
+    
+    if (titleDisplay && titleInput) {
+        // Aktuellen Titel ins Input übertragen
+        titleInput.value = titleDisplay.textContent.trim();
+        
+        // Display verstecken, Input zeigen
+        titleDisplay.classList.add('d-none');
+        titleInput.classList.remove('d-none');
+        
+        // Input fokussieren und Text markieren
+        titleInput.focus();
+        titleInput.select();
+        
+        console.log('📝 Titel-Edit-Modus gestartet');
+    }
+}
 
 /**
- * UI-Display mit korrektem Content Loading
+ * Titel-Edit-Modus beenden
+ */
+function finishTitleEdit() {
+    const titleDisplay = document.getElementById('current-note-name');
+    const titleInput = document.getElementById('current-note-title-input');
+    
+    if (titleDisplay && titleInput) {
+        const newTitle = titleInput.value.trim() || 'Unbenannte Notiz';
+        
+        // Display aktualisieren
+        titleDisplay.textContent = newTitle;
+        
+        // Input verstecken, Display zeigen
+        titleInput.classList.add('d-none');
+        titleDisplay.classList.remove('d-none');
+        
+        // Titel speichern falls geändert
+        if (currentNoteData && newTitle !== currentNoteData.title) {
+            updateNoteTitle(newTitle);
+        }
+        
+        console.log('✅ Titel-Edit-Modus beendet:', newTitle);
+    }
+}
+
+/**
+ * Enter/Escape bei Titel-Eingabe behandeln
+ */
+function handleTitleKeypress(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        finishTitleEdit();
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        // Änderungen verwerfen
+        const titleInput = document.getElementById('current-note-title-input');
+        if (titleInput && currentNoteData) {
+            titleInput.value = currentNoteData.title || 'Unbenannte Notiz';
+        }
+        finishTitleEdit();
+    }
+}
+
+/**
+ * Titel in Datenbank aktualisieren
+ */
+async function updateNoteTitle(newTitle) {
+    if (!currentNoteId) return;
+    
+    try {
+        const response = await fetch(`/api/notes/${currentNoteId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: newTitle,
+                content: currentNoteData.content // Content unverändert
+            })
+        });
+        
+        if (response.ok) {
+            const updatedNote = await response.json();
+            currentNoteData = updatedNote;
+            
+            // Dropdown aktualisieren
+            const noteIndex = sidebarNotes.findIndex(note => note.id === currentNoteId);
+            if (noteIndex !== -1) {
+                sidebarNotes[noteIndex] = updatedNote;
+                renderNotesDropdown();
+            }
+            
+            showTempMessage('✅ Titel gespeichert', 'success');
+            console.log('✅ Titel aktualisiert:', newTitle);
+        } else {
+            showTempMessage('❌ Fehler beim Speichern des Titels', 'danger');
+        }
+    } catch (error) {
+        console.error('❌ Fehler beim Titel-Update:', error);
+        showTempMessage('❌ Verbindungsfehler', 'danger');
+    }
+}
+
+
+/**
+ * UI-Display mit korrektem Content Loading - NUR INPUT VERSION
  */
 function updateNoteDisplay() {
     if (!currentNoteData) return;
@@ -406,26 +513,11 @@ function updateNoteDisplay() {
     
     console.log('🔄 Aktualisiere Note Display für:', cleanTitle);
     
-    // Header aktualisieren - MIT NULL-CHECK
-    const noteNameElement = document.getElementById('current-note-name');
-    if (noteNameElement) {
-        noteNameElement.textContent = cleanTitle;
-        console.log('✅ Header-Titel aktualisiert');
-    } else {
-        console.warn('⚠️ Element #current-note-name nicht gefunden');
-    }
+    // ❌ KEIN current-note-name mehr (small Element weg)
+    // ❌ KEIN current-note-title-display mehr (redundanter Titel weg)
     
-    // Titel anzeigen - MIT NULL-CHECKS
-    const titleDisplay = document.getElementById('current-note-title-display');
+    // ✅ NUR NOCH Input aktualisieren:
     const titleInput = document.getElementById('current-note-title-input');
-    
-    if (titleDisplay) {
-        titleDisplay.textContent = cleanTitle;
-        console.log('✅ Titel-Display aktualisiert');
-    } else {
-        console.warn('⚠️ Element #current-note-title-display nicht gefunden');
-    }
-    
     if (titleInput) {
         titleInput.value = cleanTitle;
         console.log('✅ Titel-Input aktualisiert');

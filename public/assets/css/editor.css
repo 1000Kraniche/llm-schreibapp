@@ -613,8 +613,8 @@
 
 /* NOTES-CONTENT FESTE HÖHE MIT SCROLL */
 .notes-content {
-    height: 400px !important; /* Feste Höhe */
-    max-height: 400px !important;
+    height: 430px !important; /* Feste Höhe */
+    max-height: 430px !important;
     flex: none !important; /* Keine flexible Höhe mehr */
 }
 
@@ -630,13 +630,13 @@
 
 /* Editor an verfügbare Höhe anpassen */
 .note-side .note-editor {
-    height: calc(100% - 60px) !important; /* Abzug für Titel-Bereich */
+    height: 100% !important; /* Abzug für Titel-Bereich */
     min-height: 300px !important;
 }
 
 .note-side .note-editor .note-editable {
     min-height: 250px !important;
-    max-height: 280px !important;
+    max-height: 340px !important;
     overflow-y: auto !important;
     box-sizing: content-box;
 }

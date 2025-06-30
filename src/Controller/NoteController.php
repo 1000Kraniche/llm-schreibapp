@@ -34,7 +34,7 @@ class NoteController extends AbstractController
         }
 
         $notes = $noteRepository->findBy(['project' => $project], ['id' => 'DESC']);
-        
+
         return $this->formatNotesResponse($notes);
     }
 
@@ -57,7 +57,7 @@ class NoteController extends AbstractController
         }
 
         $notes = $noteRepository->findBy(['project' => $project], ['id' => 'DESC']);
-        
+
         return $this->formatNotesResponse($notes);
     }
 
@@ -68,11 +68,11 @@ class NoteController extends AbstractController
     public function getNote(int $id, NoteRepository $noteRepository): JsonResponse
     {
         $note = $noteRepository->find($id);
-        
+
         if (!$note) {
             return new JsonResponse(['error' => 'Notiz nicht gefunden'], 404);
         }
-        
+
         return new JsonResponse([
             'id' => $note->getId(),
             'title' => $note->getTitle(),
@@ -82,22 +82,21 @@ class NoteController extends AbstractController
             'parentId' => $note->getParentNote() ? $note->getParentNote()->getId() : null
         ]);
     }
-    
+
     /**
      * Neue Notiz erstellen
      */
     #[Route('/api/notes', name: 'api_notes_create', methods: ['POST'])]
     public function createNote(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $em,
         ProjectRepository $projectRepository
-    ): JsonResponse 
-    {
+    ): JsonResponse {
         // Login erforderlich
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         $data = json_decode($request->getContent(), true);
-        
+
         if (!isset($data['title'])) {
             return new JsonResponse(['error' => 'Titel ist erforderlich'], 400);
         }
@@ -117,16 +116,16 @@ class NoteController extends AbstractController
         } else {
             return new JsonResponse(['error' => 'Projekt-Slug oder -ID ist erforderlich'], 400);
         }
-        
+
         if (!$project) {
             return new JsonResponse(['error' => 'Projekt nicht gefunden oder kein Zugriff'], 404);
         }
-        
+
         $note = new Note();
         $note->setTitle($data['title']);
         $note->setProject($project);
         $note->setContent($data['content'] ?? ''); // Content optional
-        
+
         // NUR setzen falls die Entity diese Felder hat
         if (method_exists($note, 'setCreatedAt')) {
             $note->setCreatedAt(new \DateTimeImmutable());
@@ -134,7 +133,7 @@ class NoteController extends AbstractController
         if (method_exists($note, 'setUpdatedAt')) {
             $note->setUpdatedAt(new \DateTimeImmutable());
         }
-        
+
         // Parent Note falls vorhanden
         if (isset($data['parent_id']) && $data['parent_id']) {
             $parentNote = $em->getRepository(Note::class)->find($data['parent_id']);
@@ -142,10 +141,10 @@ class NoteController extends AbstractController
                 $note->setParentNote($parentNote);
             }
         }
-        
+
         $em->persist($note);
         $em->flush();
-        
+
         return new JsonResponse([
             'id' => $note->getId(),
             'title' => $note->getTitle(),
@@ -155,30 +154,29 @@ class NoteController extends AbstractController
             'parentId' => $note->getParentNote() ? $note->getParentNote()->getId() : null
         ]);
     }
-    
+
     /**
      * Notiz aktualisieren
      */
     #[Route('/api/notes/{id}', name: 'api_notes_update', methods: ['PUT'], requirements: ['id' => '\d+'])]
     public function updateNote(
-        int $id, 
-        Request $request, 
+        int $id,
+        Request $request,
         NoteRepository $noteRepository,
         EntityManagerInterface $em
-    ): JsonResponse 
-    {
+    ): JsonResponse {
         $note = $noteRepository->find($id);
-        
+
         if (!$note) {
             return new JsonResponse(['error' => 'Notiz nicht gefunden'], 404);
         }
-        
+
         $data = json_decode($request->getContent(), true);
-        
+
         if (isset($data['title'])) {
             $note->setTitle($data['title']);
         }
-        
+
         if (isset($data['content'])) {
             $note->setContent($data['content']);
         }
@@ -187,9 +185,9 @@ class NoteController extends AbstractController
         if (method_exists($note, 'setUpdatedAt')) {
             $note->setUpdatedAt(new \DateTimeImmutable());
         }
-        
+
         $em->flush();
-        
+
         return new JsonResponse([
             'id' => $note->getId(),
             'title' => $note->getTitle(),
@@ -205,20 +203,19 @@ class NoteController extends AbstractController
      */
     #[Route('/api/notes/{id}', name: 'api_notes_delete', methods: ['DELETE'], requirements: ['id' => '\d+'])]
     public function deleteNote(
-        int $id, 
+        int $id,
         NoteRepository $noteRepository,
         EntityManagerInterface $em
-    ): JsonResponse 
-    {
+    ): JsonResponse {
         $note = $noteRepository->find($id);
-        
+
         if (!$note) {
             return new JsonResponse(['error' => 'Notiz nicht gefunden'], 404);
         }
-        
+
         $em->remove($note);
         $em->flush();
-        
+
         return new JsonResponse(['success' => true, 'message' => 'Notiz gelöscht']);
     }
 
@@ -227,7 +224,7 @@ class NoteController extends AbstractController
      */
     private function formatNotesResponse(array $notes): JsonResponse
     {
-        $notesData = array_map(function($note) {
+        $notesData = array_map(function ($note) {
             return [
                 'id' => $note->getId(),
                 'title' => $note->getTitle(),
@@ -238,7 +235,7 @@ class NoteController extends AbstractController
                 'parentId' => $note->getParentNote() ? $note->getParentNote()->getId() : null
             ];
         }, $notes);
-        
+
         return new JsonResponse($notesData);
     }
 }

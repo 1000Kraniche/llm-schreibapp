@@ -22,7 +22,7 @@ class RegistrationForm extends AbstractType
         $builder
                 ->add('userName', TextType::class, [
         'label' => 'Username',
-    ])
+        ])
             ->add('email', EmailType::class, [
                                 'label' => 'Email',
                 'constraints' => [
@@ -32,7 +32,7 @@ class RegistrationForm extends AbstractType
                     new Email([
                         'message' => 'Please enter a valid email address',
                     ]),
-                ],
+                                ],
             ])
             ->add('agreeTerms', CheckboxType::class, [
                                 'mapped' => false,
@@ -40,7 +40,7 @@ class RegistrationForm extends AbstractType
                     new IsTrue([
                         'message' => 'You should agree to our terms.',
                     ]),
-                ],
+                                ],
             ])
             ->add('plainPassword', PasswordType::class, [
                                 // instead of being set onto the object directly,
